@@ -17,11 +17,11 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
   <!-- Local and Firebase Data Adapters -->
-  <script src="./data-store.js?v=2.3"></script>
-  <script src="./firebase-config.js?v=2.3"></script>
+  <script src="./data-store.js?v=2.4"></script>
+  <script src="./firebase-config.js?v=2.4"></script>
 
   <!-- Styles -->
-  <link rel="stylesheet" href="./style.css?v=2.3">
+  <link rel="stylesheet" href="./style.css?v=2.4">
 </head>
 <body>
 
@@ -413,9 +413,9 @@
                 </div>
               </div>
               <select id="settingActiveDevice" class="ios-select">
-                <option value="primary">💻 Мой Ноутбук (основной)</option>
+                <option value="primary">💻 Ноутбук</option>
                 <option value="desktop">🖥 Домашний ПК</option>
-                <option value="add">+ Добавить устройство...</option>
+                <option value="add">+ Новое ПК...</option>
               </select>
             </div>
           </div>
@@ -602,7 +602,7 @@
               <div class="settings-row-left">
                 <div class="ios-icon-badge badge-pink">🧲</div>
                 <div class="settings-row-label">
-                  <span class="settings-label-main">Упругость анимаций (Physics)</span>
+                  <span class="settings-label-main">Упругость анимаций</span>
                   <span class="settings-label-sub">Характер пружинного отскока</span>
                 </div>
               </div>
@@ -622,8 +622,8 @@
                 </div>
               </div>
               <select id="settingDurationFormat" class="ios-select">
-                <option value="human">Краткий (6ч 45м)</option>
-                <option value="exact">С секундами (06:45:12)</option>
+                <option value="human">Краткий (ч/м)</option>
+                <option value="exact">Точный (сек)</option>
               </select>
             </div>
           </div>
@@ -739,7 +739,7 @@
                 </div>
               </div>
               <select id="settingHibernateMode" class="ios-select">
-                <option value="cyan">Отдельный цвет (Cyan)</option>
+                <option value="cyan">Отдельный цвет</option>
                 <option value="off">Считать выключением</option>
               </select>
             </div>
@@ -753,7 +753,7 @@
                 </div>
               </div>
               <select id="settingTimelineMode" class="ios-select">
-                <option value="full">Полные 24 часа (00-24)</option>
+                <option value="full">Полные 24 часа</option>
                 <option value="work">Только активные часы</option>
               </select>
             </div>
@@ -868,6 +868,6 @@
   </div>
 
   <!-- App Logic -->
-  <script src="./app.js?v=2.3"></script>
+  <script src="./app.js?v=2.4"></script>
 </body>
 </html>
