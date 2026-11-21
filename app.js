@@ -21,37 +21,46 @@
 (function () {
   'use strict';
 
+  // Default Settings Schema
+  const DEFAULT_SETTINGS = {
+    reportTime: '23:59',
+    detailedTable: true,
+    dailyTargetHours: 8,
+    breakReminder: true,
+    hapticFeedback: true,
+    accentColor: 'emerald',      // 13
+    glassBlur: 24,               // 14
+    density: 'comfortable',      // 15
+    springPhysics: 'rubber',     // 16
+    ambientGlow: true,           // 17
+    durationFormat: 'human',     // 18
+    ignoreMicro: true,           // 19
+    sessionMerge: 5,             // 20
+    hibernateMode: 'cyan',       // 21
+    timelineMode: 'full',        // 22
+    dataRetention: '30',         // 23
+    autoBackup: true,            // 25
+    activeDevice: 'primary',     // 27
+    weeklyScore: true,
+    weeklyScoreTime: '20:00',
+    curfewTime: '22:30'
+  };
+
+  // Timezone-safe Local Date (YYYY-MM-DD)
+  function getLocalDateString(d = new Date()) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+
   // Global Application State
   const state = {
     currentTab: 'today',
     selectedDateKey: null,
     isTimelineStretched: false,
     timelineData: null,
-    settings: {
-      reportTime: '23:59',
-      detailedTable: true,
-      dailyTargetHours: 8,
-      breakReminder: true,
-      hapticFeedback: true,
-      // 13 Advanced Settings
-      accentColor: 'emerald',      // 13
-      glassBlur: 24,               // 14
-      density: 'comfortable',      // 15
-      springPhysics: 'rubber',     // 16
-      ambientGlow: true,           // 17
-      durationFormat: 'human',     // 18
-      ignoreMicro: true,           // 19
-      sessionMerge: 5,             // 20
-      hibernateMode: 'cyan',       // 21
-      timelineMode: 'full',        // 22
-      dataRetention: '30',         // 23
-      autoBackup: true,            // 25
-      activeDevice: 'primary',     // 27
-      // Feature 10: Parental Weekly Score & Bedtime Curfew
-      weeklyScore: true,
-      weeklyScoreTime: '20:00',
-      curfewTime: '22:30'
-    }
+    settings: { ...DEFAULT_SETTINGS }
   };
 
   // Telegram WebApp Integration
@@ -60,8 +69,11 @@
     try {
       tg.ready();
       tg.expand();
-      tg.setHeaderColor('#0a0e17');
-      tg.setBackgroundColor('#0a0e17');
+      if (typeof tg.enableClosingConfirmation === 'function') {
+        tg.enableClosingConfirmation();
+      }
+      if (typeof tg.setHeaderColor === 'function') tg.setHeaderColor('#0a0e17');
+      if (typeof tg.setBackgroundColor === 'function') tg.setBackgroundColor('#0a0e17');
       document.body.classList.add('telegram-theme');
     } catch (e) {
       console.warn('Telegram WebApp API init:', e);
@@ -375,25 +387,37 @@
     }
   }
 
-  // Data Loading (supports local window.LOCAL_TIMELINE_DATA and fetch)
-  async function loadData() {
-    // 1. Try local memory store first (instant, 0 network latency, 0 CORS)
+  // Data Loading (supports local window.LOCAL_TIMELINE_DATA and network fetch)
+  async function loadData(forceNetwork = false) {
+    // 1. Force network fetch if requested (e.g. manual sync)
+    if (forceNetwork) {
+      try {
+        const res = await fetch('./data.json?t=' + Date.now());
+        if (res.ok) {
+          state.timelineData = await res.json();
+          window.LOCAL_TIMELINE_DATA = state.timelineData;
+          return state.timelineData;
+        }
+      } catch (e) {}
+    }
+
+    // 2. Try local memory store (instant, 0 network latency, 0 CORS)
     if (window.LOCAL_TIMELINE_DATA && window.LOCAL_TIMELINE_DATA.days) {
       state.timelineData = window.LOCAL_TIMELINE_DATA;
       return state.timelineData;
     }
 
-    // 2. Try fetch data.json
+    // 3. Try fetch data.json
     try {
-      const res = await fetch('./data.json');
+      const res = await fetch('./data.json?t=' + Date.now());
       if (res.ok) {
         state.timelineData = await res.json();
         return state.timelineData;
       }
     } catch (e) {}
 
-    // 3. Fallback dummy data if nothing loaded
-    const todayStr = new Date().toISOString().split('T')[0];
+    // 4. Fallback dummy data if nothing loaded
+    const todayStr = getLocalDateString();
     state.timelineData = {
       updatedAt: new Date().toISOString(),
       device: 'LAPTOP-USER',
@@ -458,21 +482,22 @@
     }
 
     // Setting 18: Duration Format (Human vs Exact)
+    const actSec = day.activeSeconds || 0;
     const bigStat = document.getElementById(`${containerPrefix}BigStat`);
     const bigStatExact = document.getElementById(`${containerPrefix}BigStatExact`);
     if (bigStat && bigStatExact) {
       if (state.settings.durationFormat === 'exact') {
-        bigStat.textContent = formatSecondsExact(day.activeSeconds);
-        bigStatExact.textContent = formatSecondsHuman(day.activeSeconds);
+        bigStat.textContent = formatSecondsExact(actSec);
+        bigStatExact.textContent = formatSecondsHuman(actSec);
       } else {
-        bigStat.textContent = formatSecondsHuman(day.activeSeconds);
-        bigStatExact.textContent = formatSecondsExact(day.activeSeconds);
+        bigStat.textContent = formatSecondsHuman(actSec);
+        bigStatExact.textContent = formatSecondsExact(actSec);
       }
     }
 
     // Daily Target Progress
-    const targetSeconds = (state.settings.dailyTargetHours || 8) * 3600;
-    const progressPercent = Math.min(100, Math.round((day.activeSeconds / targetSeconds) * 100));
+    const targetSeconds = Math.max(1, (state.settings.dailyTargetHours || 8) * 3600);
+    const progressPercent = Math.min(100, Math.round((actSec / targetSeconds) * 100));
     const targetLabel = document.getElementById(`${containerPrefix}TargetPercent`);
     if (targetLabel) targetLabel.textContent = `${progressPercent}%`;
 
@@ -577,33 +602,38 @@
     const sessionList = document.getElementById(`${containerPrefix}SessionsList`);
     if (sessionList) {
       sessionList.innerHTML = '';
-      (day.sessions || []).slice().reverse().forEach((session) => {
-        const item = document.createElement('div');
-        item.className = 'session-item';
+      const sessionsArr = (day.sessions || []).slice().reverse();
+      if (sessionsArr.length === 0) {
+        sessionList.innerHTML = '<div style="padding: 16px; text-align: center; color: rgba(255, 255, 255, 0.4); font-size: 13px;">Сессии активности отсутствуют</div>';
+      } else {
+        sessionsArr.forEach((session) => {
+          const item = document.createElement('div');
+          item.className = 'session-item';
 
-        let iconClass = 'icon-off';
-        let iconEmoji = '🔌';
-        if (session.state === 'включен') { iconClass = 'icon-on'; iconEmoji = '⚡'; }
-        else if (session.state === 'сон') { iconClass = 'icon-sleep'; iconEmoji = '💤'; }
-        else if (session.state === 'гибернация') { iconClass = 'icon-hibernate'; iconEmoji = '🧊'; }
+          let iconClass = 'icon-off';
+          let iconEmoji = '🔌';
+          if (session.state === 'включен') { iconClass = 'icon-on'; iconEmoji = '⚡'; }
+          else if (session.state === 'сон') { iconClass = 'icon-sleep'; iconEmoji = '💤'; }
+          else if (session.state === 'гибернация') { iconClass = 'icon-hibernate'; iconEmoji = '🧊'; }
 
-        item.innerHTML = `
-          <div class="session-left">
-            <div class="session-icon ${iconClass}">${iconEmoji}</div>
-            <div>
-              <div class="session-meta-time">${session.start} – ${session.end}</div>
-              <div class="session-meta-state">${session.state}</div>
+          item.innerHTML = `
+            <div class="session-left">
+              <div class="session-icon ${iconClass}">${iconEmoji}</div>
+              <div>
+                <div class="session-meta-time">${session.start} – ${session.end}</div>
+                <div class="session-meta-state">${session.state}</div>
+              </div>
             </div>
-          </div>
-          <div class="session-dur">${session.duration}</div>
-        `;
+            <div class="session-dur">${session.duration}</div>
+          `;
 
-        item.addEventListener('click', () => {
-          triggerHaptic('selection');
+          item.addEventListener('click', () => {
+            triggerHaptic('selection');
+          });
+
+          sessionList.appendChild(item);
         });
-
-        sessionList.appendChild(item);
-      });
+      }
     }
   }
 
@@ -629,6 +659,17 @@
     tooltip._timer = setTimeout(() => {
       tooltip.classList.remove('show');
     }, 3200);
+
+    // Dismiss on outside touch
+    const dismissTooltip = (e) => {
+      if (!segmentEl.contains(e.target) && !tooltip.contains(e.target)) {
+        tooltip.classList.remove('show');
+        document.removeEventListener('pointerdown', dismissTooltip);
+      }
+    };
+    setTimeout(() => {
+      document.addEventListener('pointerdown', dismissTooltip, { once: true });
+    }, 20);
   }
 
   // Render History Days Selector Chips (Respects Setting 23: Data Retention)
@@ -646,6 +687,11 @@
       if (!isNaN(limit)) {
         sortedDates = allDates.slice(0, limit);
       }
+    }
+
+    if (sortedDates.length === 0) {
+      chipContainer.innerHTML = '<div style="padding: 12px 16px; color: rgba(255, 255, 255, 0.4); font-size: 13px;">Нет записей в архиве</div>';
+      return;
     }
 
     sortedDates.forEach((dateKey) => {
@@ -678,8 +724,8 @@
       chipContainer.appendChild(chip);
     });
 
-    // Select first chip by default if needed
-    if (!state.selectedDateKey && sortedDates.length > 0) {
+    // Select first chip by default or if previous selection fell out of retention window
+    if ((!state.selectedDateKey || !sortedDates.includes(state.selectedDateKey)) && sortedDates.length > 0) {
       state.selectedDateKey = sortedDates[0];
     }
     if (sortedDates.includes(state.selectedDateKey)) {
@@ -980,6 +1026,13 @@
     });
 
     // Ensure layout coordinates are accurate after styles/fonts load
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(() => {
+        const idx = dockButtons.findIndex(b => b.getAttribute('data-tab') === state.currentTab);
+        snapPillToTab(idx >= 0 ? idx : 0, false);
+      });
+    }
+
     setTimeout(() => {
       const idx = dockButtons.findIndex(b => b.getAttribute('data-tab') === state.currentTab);
       snapPillToTab(idx >= 0 ? idx : 0, false);
@@ -1302,7 +1355,7 @@
         btnSyncNow.textContent = 'Синхронизация...';
       }
 
-      await loadData();
+      await loadData(true);
       refreshCurrentScreen();
       renderHistoryChips();
       updateWeeklyScoreDisplay();
@@ -1332,14 +1385,14 @@
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `laptop-timeline-${new Date().toISOString().split('T')[0]}.json`;
+        a.download = `laptop-timeline-${getLocalDateString()}.json`;
         a.click();
         URL.revokeObjectURL(url);
         showToast('JSON успешно скачан', '📥');
       });
     }
 
-    // Export CSV
+    // Export CSV (with UTF-8 BOM for Russian Excel compatibility)
     const btnExportCsv = document.getElementById('btnExportCsv');
     if (btnExportCsv) {
       btnExportCsv.addEventListener('click', () => {
@@ -1348,16 +1401,34 @@
         const days = state.timelineData?.days || {};
         Object.keys(days).sort().forEach(date => {
           const d = days[date];
-          csv += `${d.date},${d.dayOfWeek},${d.activeSeconds},${d.sleepSeconds},${d.offSeconds},${d.firstOn},${d.lastEvent}\n`;
+          csv += `${d.date},${d.dayOfWeek || ''},${d.activeSeconds || 0},${d.sleepSeconds || 0},${d.offSeconds || 0},${d.firstOn || '—'},${d.lastEvent || '—'}\n`;
         });
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `laptop-timeline-${new Date().toISOString().split('T')[0]}.csv`;
+        a.download = `laptop-timeline-${getLocalDateString()}.csv`;
         a.click();
         URL.revokeObjectURL(url);
         showToast('CSV успешно скачан', '📊');
+      });
+    }
+
+    // Reset Settings to Defaults
+    const btnResetSettings = document.getElementById('btnResetSettings');
+    if (btnResetSettings) {
+      btnResetSettings.addEventListener('click', () => {
+        triggerHaptic('medium');
+        const confirmed = confirm('Сбросить все настройки приложения к стандартным значениям?');
+        if (!confirmed) return;
+
+        state.settings = { ...DEFAULT_SETTINGS };
+        saveSettings();
+        loadSettings();
+        refreshCurrentScreen();
+        renderHistoryChips();
+        updateWeeklyScoreDisplay();
+        showToast('Настройки сброшены к умолчанию', '🔄');
       });
     }
   }
@@ -1975,7 +2046,7 @@
 
   async function sendWeeklyScoreToTelegram() {
     const token = '9264075011:AAEuTIlcMnjzKw8T85NE9lvpSMWJRfbQ_QM';
-    const chatId = tg?.initDataUnsafe?.user?.id ? tg.initDataUnsafe.user.id.toString() : '6278269178';
+    const chatId = tg?.initDataUnsafe?.user?.id ? tg.initDataUnsafe.user.id.toString() : (state.timelineData?.userId || '6278269178');
     const scoreData = computeWeeklyScore(
       state.timelineData?.days,
       state.settings.curfewTime || '22:30',
@@ -2176,6 +2247,7 @@
 
       card.addEventListener('touchstart', (e) => {
         if (e.touches.length !== 1) return;
+        if (e.target.closest('input, select, textarea, button, .ios-custom-select, .color-circle, .day-chip, .ios-toggle')) return;
         startX = e.touches[0].clientX;
         startY = e.touches[0].clientY;
         isSwiping = false;

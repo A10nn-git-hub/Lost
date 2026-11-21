@@ -25,8 +25,13 @@ class FirebaseSyncAdapter {
   }
 
   init() {
-    const savedConfig = localStorage.getItem("laptop_firebase_config");
-    const config = savedConfig ? JSON.parse(savedConfig) : FIREBASE_DEFAULT_CONFIG;
+    let config = FIREBASE_DEFAULT_CONFIG;
+    try {
+      const savedConfig = localStorage.getItem("laptop_firebase_config");
+      if (savedConfig) config = { ...FIREBASE_DEFAULT_CONFIG, ...JSON.parse(savedConfig) };
+    } catch (e) {
+      config = FIREBASE_DEFAULT_CONFIG;
+    }
 
     if (config.apiKey && config.projectId && window.firebase) {
       try {
