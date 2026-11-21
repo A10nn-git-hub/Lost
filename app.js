@@ -1650,6 +1650,17 @@
         openPicker(sel, trigger);
       });
 
+      const parentRow = sel.closest('.settings-row');
+      if (parentRow && !parentRow.dataset.hasPickerListener) {
+        parentRow.dataset.hasPickerListener = 'true';
+        parentRow.style.cursor = 'pointer';
+        parentRow.addEventListener('click', (e) => {
+          if (e.target.closest('input, select, label.ios-toggle, a, .ios-custom-select')) return;
+          trigger.classList.add('active');
+          openPicker(sel, trigger);
+        });
+      }
+
       sel.addEventListener('change', () => {
         const opt = sel.options[sel.selectedIndex];
         const lbl = trigger.querySelector('.ios-custom-select-label');

@@ -17,11 +17,11 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
   <!-- Local and Firebase Data Adapters -->
-  <script src="./data-store.js?v=2.4"></script>
-  <script src="./firebase-config.js?v=2.4"></script>
+  <script src="./data-store.js?v=2.5"></script>
+  <script src="./firebase-config.js?v=2.5"></script>
 
   <!-- Styles -->
-  <link rel="stylesheet" href="./style.css?v=2.4">
+  <link rel="stylesheet" href="./style.css?v=2.5">
 </head>
 <body>
 
@@ -269,7 +269,7 @@
           <div class="settings-group-title">Основные</div>
           <div class="settings-card rubber">
             <!-- Row 1: Devices -->
-            <div class="settings-row settings-nav-row" data-open-sub="subDevices">
+            <div class="settings-nav-row" data-open-sub="subDevices">
               <div class="settings-row-left">
                 <div class="ios-icon-badge badge-blue">💻</div>
                 <span class="settings-label-main">Устройства (Multi-PC)</span>
@@ -283,7 +283,7 @@
             </div>
 
             <!-- Row 2: Notifications -->
-            <div class="settings-row settings-nav-row" data-open-sub="subNotifications">
+            <div class="settings-nav-row" data-open-sub="subNotifications">
               <div class="settings-row-left">
                 <div class="ios-icon-badge badge-indigo">🔔</div>
                 <span class="settings-label-main">Уведомления и бот</span>
@@ -303,7 +303,7 @@
           <div class="settings-group-title">Экран и оформление</div>
           <div class="settings-card rubber">
             <!-- Row 3: Appearance & Liquid Glass -->
-            <div class="settings-row settings-nav-row" data-open-sub="subAppearance">
+            <div class="settings-nav-row" data-open-sub="subAppearance">
               <div class="settings-row-left">
                 <div class="ios-icon-badge badge-purple">🎨</div>
                 <span class="settings-label-main">Экран и темы Liquid Glass</span>
@@ -317,7 +317,7 @@
             </div>
 
             <!-- Row 4: Interface & Physics -->
-            <div class="settings-row settings-nav-row" data-open-sub="subInterface">
+            <div class="settings-nav-row" data-open-sub="subInterface">
               <div class="settings-row-left">
                 <div class="ios-icon-badge badge-pink">🧲</div>
                 <span class="settings-label-main">Интерфейс и физика</span>
@@ -337,7 +337,7 @@
           <div class="settings-group-title">Учет и фильтрация</div>
           <div class="settings-card rubber">
             <!-- Row 5: Goals & Rest -->
-            <div class="settings-row settings-nav-row" data-open-sub="subGoals">
+            <div class="settings-nav-row" data-open-sub="subGoals">
               <div class="settings-row-left">
                 <div class="ios-icon-badge badge-green">🎯</div>
                 <span class="settings-label-main">Цели и напоминания</span>
@@ -351,7 +351,7 @@
             </div>
 
             <!-- Row 6: Data Filters -->
-            <div class="settings-row settings-nav-row" data-open-sub="subFilters">
+            <div class="settings-nav-row" data-open-sub="subFilters">
               <div class="settings-row-left">
                 <div class="ios-icon-badge badge-teal">🔍</div>
                 <span class="settings-label-main">Фильтры и точность</span>
@@ -371,7 +371,7 @@
           <div class="settings-group-title">Данные и архив</div>
           <div class="settings-card rubber">
             <!-- Row 7: Storage & Backup -->
-            <div class="settings-row settings-nav-row" data-open-sub="subStorage">
+            <div class="settings-nav-row" data-open-sub="subStorage">
               <div class="settings-row-left">
                 <div class="ios-icon-badge badge-orange">☁️</div>
                 <span class="settings-label-main">Хранилище и бэкапы</span>
@@ -510,7 +510,7 @@
         <section class="settings-group">
           <div class="settings-group-title">Цветовая палитра</div>
           <div class="settings-card rubber">
-            <div class="settings-row" style="flex-direction:column; align-items:flex-start; gap:10px;">
+            <div class="settings-row settings-row-col">
               <div class="settings-row-left">
                 <div class="ios-icon-badge badge-purple">🎨</div>
                 <div class="settings-row-label">
@@ -518,7 +518,7 @@
                   <span class="settings-label-sub">Оттенок подсветки, кнопок и шкалы</span>
                 </div>
               </div>
-              <div class="color-picker-row" style="padding-left:42px;">
+              <div class="color-picker-row">
                 <div class="color-circle active" data-color="emerald" style="background:#10b981; color:#10b981;" title="Изумрудный (Apple)"></div>
                 <div class="color-circle" data-color="sapphire" style="background:#3b82f6; color:#3b82f6;" title="Сапфировый (Синий)"></div>
                 <div class="color-circle" data-color="amethyst" style="background:#a855f7; color:#a855f7;" title="Аметистовый (Фиолетовый)"></div>
@@ -532,8 +532,8 @@
         <section class="settings-group">
           <div class="settings-group-title">Эффекты стекла</div>
           <div class="settings-card rubber">
-            <div class="settings-row" style="flex-direction:column; align-items:flex-start; gap:8px;">
-              <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+            <div class="settings-row settings-row-col">
+              <div class="settings-row-col-header">
                 <div class="settings-row-left">
                   <div class="ios-icon-badge badge-cyan">💧</div>
                   <div class="settings-row-label">
@@ -541,10 +541,10 @@
                     <span class="settings-label-sub">Глубина матовой прозрачности</span>
                   </div>
                 </div>
-                <span id="blurValLabel" style="font-size:13px; font-weight:700; color:var(--text-secondary);">24px</span>
+                <span id="blurValLabel" class="slider-val-badge">24px</span>
               </div>
-              <div style="width:100%; padding-left:42px; padding-top:2px;">
-                <input type="range" id="settingGlassBlur" min="10" max="40" step="2" value="24" style="width:100%; accent-color:var(--color-active);">
+              <div class="settings-slider-wrap">
+                <input type="range" id="settingGlassBlur" min="10" max="40" step="2" value="24" class="ios-slider-input">
               </div>
             </div>
 
@@ -649,8 +649,8 @@
         <section class="settings-group">
           <div class="settings-group-title">Продуктивность</div>
           <div class="settings-card rubber">
-            <div class="settings-row" style="flex-direction:column; align-items:flex-start; gap:8px;">
-              <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+            <div class="settings-row settings-row-col">
+              <div class="settings-row-col-header">
                 <div class="settings-row-left">
                   <div class="ios-icon-badge badge-green">🎯</div>
                   <div class="settings-row-label">
@@ -658,10 +658,10 @@
                     <span class="settings-label-sub">Норма работы за компьютером</span>
                   </div>
                 </div>
-                <span id="targetHoursLabel" style="font-weight:700; color:var(--color-active);">8 ч</span>
+                <span id="targetHoursLabel" class="slider-val-badge">8 ч</span>
               </div>
-              <div style="width:100%; padding-left:42px; padding-top:2px;">
-                <input type="range" id="settingDailyTarget" min="2" max="14" step="1" value="8" style="width:100%; accent-color:var(--color-active);">
+              <div class="settings-slider-wrap">
+                <input type="range" id="settingDailyTarget" min="2" max="14" step="1" value="8" class="ios-slider-input">
               </div>
             </div>
 
@@ -868,6 +868,6 @@
   </div>
 
   <!-- App Logic -->
-  <script src="./app.js?v=2.4"></script>
+  <script src="./app.js?v=2.5"></script>
 </body>
 </html>
