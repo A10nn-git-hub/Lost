@@ -239,6 +239,8 @@
 
     if (profileSub) profileSub.textContent = `${devName} • Windows 11 • В сети`;
     if (deviceSelect) deviceSelect.value = deviceKey;
+    window._updateRootSettingsLabels?.();
+    window._updateCustomSelectLabels?.();
   }
 
   // Visual Theme & UI Application
@@ -486,7 +488,7 @@
 
     const sleepDuration = document.getElementById(`${containerPrefix}SleepDuration`);
     if (sleepDuration) {
-      const totalSleepSec = day.sleepSeconds + day.hibernateSeconds;
+      const totalSleepSec = (day.sleepSeconds || 0) + (day.hibernateSeconds || 0);
       sleepDuration.textContent = state.settings.durationFormat === 'exact'
         ? formatSecondsExact(totalSleepSec)
         : formatSecondsHuman(totalSleepSec);
@@ -494,9 +496,10 @@
 
     const offDuration = document.getElementById(`${containerPrefix}OffDuration`);
     if (offDuration) {
+      const totalOffSec = day.offSeconds || 0;
       offDuration.textContent = state.settings.durationFormat === 'exact'
-        ? formatSecondsExact(day.offSeconds)
-        : formatSecondsHuman(day.offSeconds);
+        ? formatSecondsExact(totalOffSec)
+        : formatSecondsHuman(totalOffSec);
     }
 
     // Setting 22: Timeline View Mode (Full 24h vs Active Work-hours)
@@ -616,8 +619,10 @@
     const barRect = segmentEl.parentElement.getBoundingClientRect();
     const segRect = segmentEl.getBoundingClientRect();
     const centerOffset = (segRect.left + segRect.width / 2) - barRect.left;
+    const barWidth = barRect.width || 320;
+    const clampedOffset = Math.max(55, Math.min(barWidth - 55, centerOffset));
 
-    tooltip.style.left = `${centerOffset}px`;
+    tooltip.style.left = `${clampedOffset}px`;
     tooltip.classList.add('show');
 
     clearTimeout(tooltip._timer);
@@ -650,8 +655,8 @@
       chip.className = 'day-chip';
       if (dateKey === state.selectedDateKey) chip.classList.add('active');
 
-      const dateObj = new Date(dateKey);
-      const dayNum = dateObj.getDate();
+      // Timezone-safe day number extraction from YYYY-MM-DD
+      const dayNum = parseInt(dateKey.split('-')[2], 10) || new Date(dateKey).getDate();
 
       chip.innerHTML = `
         <div class="day-chip-name">${day.dayOfWeek || ''}</div>
@@ -981,17 +986,20 @@
     }, 100);
   }
 
-  // 24-Hour Timeline Stretch Interaction
+  // 24-Hour Timeline Stretch Interaction (Synced between Today & History)
   function initTimelineStretch() {
     ['today', 'history'].forEach(prefix => {
       const btn = document.getElementById(`${prefix}StretchBtn`);
-      const track = document.getElementById(`${prefix}TimelineTrack`);
-      if (btn && track) {
+      if (btn) {
         btn.addEventListener('click', () => {
           triggerHaptic('light');
           state.isTimelineStretched = !state.isTimelineStretched;
-          track.classList.toggle('stretched', state.isTimelineStretched);
-          btn.textContent = state.isTimelineStretched ? 'Сжать 🤏' : 'Растянуть ↔';
+          ['today', 'history'].forEach(p => {
+            const t = document.getElementById(`${p}TimelineTrack`);
+            const b = document.getElementById(`${p}StretchBtn`);
+            if (t) t.classList.toggle('stretched', state.isTimelineStretched);
+            if (b) b.textContent = state.isTimelineStretched ? 'Сжать 🤏' : 'Растянуть ↔';
+          });
           showToast(state.isTimelineStretched ? 'Шкала растянута' : 'Шкала сжата', '🔍');
         });
       }
@@ -1297,6 +1305,7 @@
       await loadData();
       refreshCurrentScreen();
       renderHistoryChips();
+      updateWeeklyScoreDisplay();
 
       setTimeout(() => {
         if (btnSyncNow) {
@@ -1425,8 +1434,37 @@
     }
 
     function handleTgBack() {
+      // 1. If Weekly Score modal is open, close it first
+      const scoreOverlay = document.getElementById('iosWeeklyScoreOverlay');
+      if (scoreOverlay && scoreOverlay.classList.contains('active')) {
+        scoreOverlay.classList.remove('active');
+        document.body.style.overflow = '';
+        if (tg?.BackButton && !currentOpenSub) {
+          try {
+            tg.BackButton.hide();
+          } catch (e) {}
+        }
+        return;
+      }
+
+      // 2. If Picker modal is open, close it first
+      const pickerOverlay = document.getElementById('iosPickerOverlay');
+      if (pickerOverlay && pickerOverlay.classList.contains('active')) {
+        pickerOverlay.classList.remove('active');
+        document.body.style.overflow = '';
+        if (tg?.BackButton && !currentOpenSub) {
+          try {
+            tg.BackButton.hide();
+          } catch (e) {}
+        }
+        return;
+      }
+
+      // 3. Otherwise close current subpage
       closeCurrentSubPage(true);
     }
+    window._handleTgBackModal = handleTgBack;
+    window._isSubPageOpen = () => !!currentOpenSub;
 
     function openSubPage(subId) {
       if (isTransitioning) return;
@@ -1651,11 +1689,13 @@
       });
 
       overlay.classList.add('active');
+      document.body.style.overflow = 'hidden';
       triggerHaptic('light');
     }
 
     function closePicker() {
       overlay.classList.remove('active');
+      document.body.style.overflow = '';
       if (activeTrigger) {
         activeTrigger.classList.remove('active');
       }
@@ -1779,9 +1819,9 @@
         peakDayStr = `${day.displayDate || dKey} (${Math.floor(actSec / 3600)}ч ${Math.round((actSec % 3600) / 60)}м)`;
       }
 
-      // Check last event against bedtime curfew
+      // Check last event against bedtime curfew (only if computer was used)
       let curfewOk = true;
-      if (day.lastEvent) {
+      if (actSec > 0 && day.lastEvent && typeof day.lastEvent === 'string' && day.lastEvent.includes(':')) {
         const parts = day.lastEvent.split(':').map(Number);
         const lastMin = parts[0] * 60 + parts[1];
         if (lastMin > curfewMinutes || lastMin < 5 * 60) {
@@ -1916,9 +1956,10 @@
       scoreData.days.forEach(d => {
         const row = document.createElement('div');
         row.className = 'weekly-day-row';
+        const dayLabel = d.dayOfWeek ? `${d.dayOfWeek}, ${d.displayDate}` : d.displayDate;
         row.innerHTML = `
           <div class="weekly-day-left">
-            <span>${d.displayDate}</span>
+            <span>${dayLabel}</span>
             <span class="weekly-day-hours">${d.hoursStr}</span>
           </div>
           <div class="weekly-day-right">
@@ -1994,11 +2035,25 @@
     function openModal() {
       updateWeeklyScoreDisplay();
       overlay.classList.add('active');
+      document.body.style.overflow = 'hidden';
+      if (tg?.BackButton) {
+        try {
+          tg.BackButton.show();
+          if (window._handleTgBackModal) tg.BackButton.onClick(window._handleTgBackModal);
+        } catch (e) {}
+      }
       triggerHaptic('light');
     }
 
     function closeModal() {
       overlay.classList.remove('active');
+      document.body.style.overflow = '';
+      if (tg?.BackButton && (!window._isSubPageOpen || !window._isSubPageOpen())) {
+        try {
+          if (window._handleTgBackModal) tg.BackButton.offClick(window._handleTgBackModal);
+          tg.BackButton.hide();
+        } catch (e) {}
+      }
     }
 
     if (openBtnHistory) openBtnHistory.addEventListener('click', openModal);
