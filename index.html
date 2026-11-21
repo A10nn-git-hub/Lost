@@ -8,15 +8,20 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   
+  <!-- Cache Control -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  
   <!-- Telegram WebApp SDK -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
   <!-- Local and Firebase Data Adapters -->
-  <script src="./data-store.js"></script>
-  <script src="./firebase-config.js"></script>
+  <script src="./data-store.js?v=2.2"></script>
+  <script src="./firebase-config.js?v=2.2"></script>
 
   <!-- Styles -->
-  <link rel="stylesheet" href="./style.css">
+  <link rel="stylesheet" href="./style.css?v=2.2">
 </head>
 <body>
 
@@ -254,7 +259,9 @@
             <div class="ios-profile-name" id="settingsProfileName">Артемий</div>
             <div class="ios-profile-sub" id="settingsProfileSub">Мой Ноутбук • Windows 11 • В сети</div>
           </div>
-          <div class="ios-chevron">›</div>
+          <svg class="settings-chevron-svg" width="8" height="14" viewBox="0 0 8 14" fill="none">
+            <path d="M1 1L7 7L1 13" stroke="rgba(255,255,255,0.3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
         </section>
 
         <!-- Group 1: General & Notifications -->
@@ -262,26 +269,30 @@
           <div class="settings-group-title">Основные</div>
           <div class="settings-card rubber">
             <!-- Row 1: Devices -->
-            <div class="settings-nav-row" data-open-sub="subDevices">
+            <div class="settings-row settings-nav-row" data-open-sub="subDevices">
               <div class="settings-row-left">
                 <div class="ios-icon-badge badge-blue">💻</div>
                 <span class="settings-label-main">Устройства (Multi-PC)</span>
               </div>
               <div class="settings-row-right">
                 <span class="settings-val-badge" id="rootValDevice">Ноутбук</span>
-                <span class="settings-chevron">›</span>
+                <svg class="settings-chevron-svg" width="7" height="12" viewBox="0 0 7 12" fill="none">
+                  <path d="M1 1L6 6L1 11" stroke="rgba(255,255,255,0.3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
               </div>
             </div>
 
             <!-- Row 2: Notifications -->
-            <div class="settings-nav-row" data-open-sub="subNotifications">
+            <div class="settings-row settings-nav-row" data-open-sub="subNotifications">
               <div class="settings-row-left">
                 <div class="ios-icon-badge badge-indigo">🔔</div>
                 <span class="settings-label-main">Уведомления и бот</span>
               </div>
               <div class="settings-row-right">
                 <span class="settings-val-badge" id="rootValNotify">23:59</span>
-                <span class="settings-chevron">›</span>
+                <svg class="settings-chevron-svg" width="7" height="12" viewBox="0 0 7 12" fill="none">
+                  <path d="M1 1L6 6L1 11" stroke="rgba(255,255,255,0.3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
               </div>
             </div>
           </div>
@@ -292,26 +303,30 @@
           <div class="settings-group-title">Экран и оформление</div>
           <div class="settings-card rubber">
             <!-- Row 3: Appearance & Liquid Glass -->
-            <div class="settings-nav-row" data-open-sub="subAppearance">
+            <div class="settings-row settings-nav-row" data-open-sub="subAppearance">
               <div class="settings-row-left">
                 <div class="ios-icon-badge badge-purple">🎨</div>
                 <span class="settings-label-main">Экран и темы Liquid Glass</span>
               </div>
               <div class="settings-row-right">
                 <span class="settings-val-badge" id="rootValTheme">Изумруд</span>
-                <span class="settings-chevron">›</span>
+                <svg class="settings-chevron-svg" width="7" height="12" viewBox="0 0 7 12" fill="none">
+                  <path d="M1 1L6 6L1 11" stroke="rgba(255,255,255,0.3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
               </div>
             </div>
 
             <!-- Row 4: Interface & Physics -->
-            <div class="settings-nav-row" data-open-sub="subInterface">
+            <div class="settings-row settings-nav-row" data-open-sub="subInterface">
               <div class="settings-row-left">
                 <div class="ios-icon-badge badge-pink">🧲</div>
-                <span class="settings-label-main">Интерфейс и физика анимаций</span>
+                <span class="settings-label-main">Интерфейс и физика</span>
               </div>
               <div class="settings-row-right">
                 <span class="settings-val-badge" id="rootValInterface">Комфорт</span>
-                <span class="settings-chevron">›</span>
+                <svg class="settings-chevron-svg" width="7" height="12" viewBox="0 0 7 12" fill="none">
+                  <path d="M1 1L6 6L1 11" stroke="rgba(255,255,255,0.3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
               </div>
             </div>
           </div>
@@ -322,26 +337,30 @@
           <div class="settings-group-title">Учет и фильтрация</div>
           <div class="settings-card rubber">
             <!-- Row 5: Goals & Rest -->
-            <div class="settings-nav-row" data-open-sub="subGoals">
+            <div class="settings-row settings-nav-row" data-open-sub="subGoals">
               <div class="settings-row-left">
                 <div class="ios-icon-badge badge-green">🎯</div>
                 <span class="settings-label-main">Цели и напоминания</span>
               </div>
               <div class="settings-row-right">
                 <span class="settings-val-badge" id="rootValGoals">8 ч</span>
-                <span class="settings-chevron">›</span>
+                <svg class="settings-chevron-svg" width="7" height="12" viewBox="0 0 7 12" fill="none">
+                  <path d="M1 1L6 6L1 11" stroke="rgba(255,255,255,0.3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
               </div>
             </div>
 
             <!-- Row 6: Data Filters -->
-            <div class="settings-nav-row" data-open-sub="subFilters">
+            <div class="settings-row settings-nav-row" data-open-sub="subFilters">
               <div class="settings-row-left">
                 <div class="ios-icon-badge badge-teal">🔍</div>
-                <span class="settings-label-main">Фильтры и точность данных</span>
+                <span class="settings-label-main">Фильтры и точность</span>
               </div>
               <div class="settings-row-right">
                 <span class="settings-val-badge" id="rootValFilters">Активны</span>
-                <span class="settings-chevron">›</span>
+                <svg class="settings-chevron-svg" width="7" height="12" viewBox="0 0 7 12" fill="none">
+                  <path d="M1 1L6 6L1 11" stroke="rgba(255,255,255,0.3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
               </div>
             </div>
           </div>
@@ -352,14 +371,16 @@
           <div class="settings-group-title">Данные и архив</div>
           <div class="settings-card rubber">
             <!-- Row 7: Storage & Backup -->
-            <div class="settings-nav-row" data-open-sub="subStorage">
+            <div class="settings-row settings-nav-row" data-open-sub="subStorage">
               <div class="settings-row-left">
                 <div class="ios-icon-badge badge-orange">☁️</div>
                 <span class="settings-label-main">Хранилище и бэкапы</span>
               </div>
               <div class="settings-row-right">
                 <span class="settings-val-badge" id="rootValStorage">30 дней</span>
-                <span class="settings-chevron">›</span>
+                <svg class="settings-chevron-svg" width="7" height="12" viewBox="0 0 7 12" fill="none">
+                  <path d="M1 1L6 6L1 11" stroke="rgba(255,255,255,0.3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
               </div>
             </div>
           </div>
@@ -370,7 +391,12 @@
       <!-- ================= SUB-PAGE 1: Устройства ================= -->
       <div id="subDevices" class="settings-nav-view sub-page">
         <div class="ios-nav-header">
-          <button class="ios-back-btn" data-back>‹ Настройки</button>
+          <button class="ios-back-btn" data-back>
+            <svg width="8" height="14" viewBox="0 0 8 14" fill="none">
+              <path d="M7 1L1 7L7 13" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span>Настройки</span>
+          </button>
           <div class="ios-nav-title">Устройства</div>
           <div style="width:50px;"></div>
         </div>
@@ -402,7 +428,12 @@
       <!-- ================= SUB-PAGE 2: Уведомления и бот ================= -->
       <div id="subNotifications" class="settings-nav-view sub-page">
         <div class="ios-nav-header">
-          <button class="ios-back-btn" data-back>‹ Настройки</button>
+          <button class="ios-back-btn" data-back>
+            <svg width="8" height="14" viewBox="0 0 8 14" fill="none">
+              <path d="M7 1L1 7L7 13" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span>Настройки</span>
+          </button>
           <div class="ios-nav-title">Уведомления</div>
           <div style="width:50px;"></div>
         </div>
@@ -466,7 +497,12 @@
       <!-- ================= SUB-PAGE 3: Экран и Liquid Glass ================= -->
       <div id="subAppearance" class="settings-nav-view sub-page">
         <div class="ios-nav-header">
-          <button class="ios-back-btn" data-back>‹ Настройки</button>
+          <button class="ios-back-btn" data-back>
+            <svg width="8" height="14" viewBox="0 0 8 14" fill="none">
+              <path d="M7 1L1 7L7 13" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span>Настройки</span>
+          </button>
           <div class="ios-nav-title">Экран и темы</div>
           <div style="width:50px;"></div>
         </div>
@@ -535,7 +571,12 @@
       <!-- ================= SUB-PAGE 4: Интерфейс и физика ================= -->
       <div id="subInterface" class="settings-nav-view sub-page">
         <div class="ios-nav-header">
-          <button class="ios-back-btn" data-back>‹ Настройки</button>
+          <button class="ios-back-btn" data-back>
+            <svg width="8" height="14" viewBox="0 0 8 14" fill="none">
+              <path d="M7 1L1 7L7 13" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span>Настройки</span>
+          </button>
           <div class="ios-nav-title">Интерфейс</div>
           <div style="width:50px;"></div>
         </div>
@@ -595,7 +636,12 @@
       <!-- ================= SUB-PAGE 5: Цели и отдых ================= -->
       <div id="subGoals" class="settings-nav-view sub-page">
         <div class="ios-nav-header">
-          <button class="ios-back-btn" data-back>‹ Настройки</button>
+          <button class="ios-back-btn" data-back>
+            <svg width="8" height="14" viewBox="0 0 8 14" fill="none">
+              <path d="M7 1L1 7L7 13" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span>Настройки</span>
+          </button>
           <div class="ios-nav-title">Цели и отдых</div>
           <div style="width:50px;"></div>
         </div>
@@ -642,7 +688,12 @@
       <!-- ================= SUB-PAGE 6: Фильтры данных ================= -->
       <div id="subFilters" class="settings-nav-view sub-page">
         <div class="ios-nav-header">
-          <button class="ios-back-btn" data-back>‹ Настройки</button>
+          <button class="ios-back-btn" data-back>
+            <svg width="8" height="14" viewBox="0 0 8 14" fill="none">
+              <path d="M7 1L1 7L7 13" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span>Настройки</span>
+          </button>
           <div class="ios-nav-title">Фильтры данных</div>
           <div style="width:50px;"></div>
         </div>
@@ -716,7 +767,12 @@
       <!-- ================= SUB-PAGE 7: Хранилище и бэкапы ================= -->
       <div id="subStorage" class="settings-nav-view sub-page">
         <div class="ios-nav-header">
-          <button class="ios-back-btn" data-back>‹ Настройки</button>
+          <button class="ios-back-btn" data-back>
+            <svg width="8" height="14" viewBox="0 0 8 14" fill="none">
+              <path d="M7 1L1 7L7 13" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span>Настройки</span>
+          </button>
           <div class="ios-nav-title">Хранилище</div>
           <div style="width:50px;"></div>
         </div>
@@ -797,6 +853,6 @@
   </nav>
 
   <!-- App Logic -->
-  <script src="./app.js"></script>
+  <script src="./app.js?v=2.2"></script>
 </body>
 </html>

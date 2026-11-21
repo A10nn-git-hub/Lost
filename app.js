@@ -1310,6 +1310,7 @@
   // iOS Authentic Settings Drill-Down Navigation & Sub-Pages
   function initSettingsNavigation() {
     let currentOpenSub = null;
+    let isTransitioning = false;
     const root = document.getElementById('settingsViewRoot');
     const tabSettings = document.getElementById('tab-settings');
 
@@ -1317,11 +1318,7 @@
       // 1. Device badge
       const rootValDevice = document.getElementById('rootValDevice');
       if (rootValDevice) {
-        if (state.settings.activeDevice === 'desktop') {
-          rootValDevice.textContent = 'ПК';
-        } else {
-          rootValDevice.textContent = 'Ноутбук';
-        }
+        rootValDevice.textContent = state.settings.activeDevice === 'desktop' ? 'ПК' : 'Ноутбук';
       }
 
       // 2. Notify badge
@@ -1358,14 +1355,14 @@
       // 6. Filters badge
       const rootValFilters = document.getElementById('rootValFilters');
       if (rootValFilters) {
-        rootValFilters.textContent = state.settings.ignoreMicro ? 'Фильтр <2м' : 'Все сессии';
+        rootValFilters.textContent = state.settings.ignoreMicro ? 'Фильтр <2м' : 'Все';
       }
 
       // 7. Storage badge
       const rootValStorage = document.getElementById('rootValStorage');
       if (rootValStorage) {
         const ret = state.settings.dataRetention;
-        rootValStorage.textContent = ret === 'all' ? 'Все дни' : `${ret || 30} дн.`;
+        rootValStorage.textContent = ret === 'all' ? 'Все' : `${ret || 30} дн.`;
       }
     }
 
@@ -1374,22 +1371,24 @@
     }
 
     function openSubPage(subId) {
+      if (isTransitioning) return;
       const targetSub = document.getElementById(subId);
       if (!targetSub || !root) return;
 
+      isTransitioning = true;
       currentOpenSub = targetSub;
-      root.classList.add('slide-left');
-      targetSub.classList.remove('slide-out');
-      targetSub.classList.add('active');
 
-      // Adjust container height to fit active subpage
-      if (tabSettings) {
-        tabSettings.style.minHeight = `${targetSub.scrollHeight + 60}px`;
-      }
+      // Ensure subpage is displayed before transitioning in
+      targetSub.style.display = 'block';
+      targetSub.classList.remove('slide-out');
+      void targetSub.offsetWidth; // Force reflow
+
+      root.classList.add('slide-left');
+      targetSub.classList.add('active');
 
       window.scrollTo({ top: 0, behavior: 'smooth' });
 
-      // Telegram Native Back Button Integration
+      // Telegram Native Back Button
       if (tg?.BackButton) {
         try {
           tg.BackButton.show();
@@ -1397,6 +1396,13 @@
         } catch (e) {}
       }
       triggerHaptic('light');
+
+      setTimeout(() => {
+        if (currentOpenSub === targetSub) {
+          root.style.display = 'none';
+        }
+        isTransitioning = false;
+      }, 340);
     }
 
     function closeCurrentSubPage(animate = true) {
@@ -1404,21 +1410,10 @@
       const closingSub = currentOpenSub;
       currentOpenSub = null;
 
-      if (tabSettings) {
-        tabSettings.style.minHeight = '';
-      }
-
-      if (animate) {
-        closingSub.classList.add('slide-out');
-        setTimeout(() => {
-          closingSub.classList.remove('active', 'slide-out');
-        }, 360);
-      } else {
-        closingSub.classList.remove('active', 'slide-out');
-      }
-
+      // Bring root back into flow before transition starts
       if (root) {
-        root.classList.remove('slide-left');
+        root.style.display = 'block';
+        void root.offsetWidth; // Force reflow
       }
 
       if (tg?.BackButton) {
@@ -1428,18 +1423,67 @@
         } catch (e) {}
       }
       triggerHaptic('light');
+
+      if (animate) {
+        isTransitioning = true;
+        closingSub.classList.add('slide-out');
+        closingSub.classList.remove('active');
+        if (root) {
+          root.classList.remove('slide-left');
+        }
+
+        setTimeout(() => {
+          closingSub.style.display = 'none';
+          closingSub.classList.remove('slide-out');
+          isTransitioning = false;
+        }, 340);
+      } else {
+        closingSub.classList.remove('active', 'slide-out');
+        closingSub.style.display = 'none';
+        if (root) {
+          root.classList.remove('slide-left');
+        }
+      }
+
       updateRootValueLabels();
     }
 
-    // Expose for external calls (e.g. tab switching, quick jump)
+    // Expose for external calls
     window._closeSettingsSubPage = closeCurrentSubPage;
     window._openSettingsSubPage = openSubPage;
     window._updateRootSettingsLabels = updateRootValueLabels;
 
-    // Attach click listeners to drill-down rows
+    // Bulletproof Event Delegation on tabSettings container
+    if (tabSettings) {
+      tabSettings.addEventListener('click', (e) => {
+        // 1. Check if back button clicked
+        const backBtn = e.target.closest('[data-back]');
+        if (backBtn) {
+          e.preventDefault();
+          e.stopPropagation();
+          closeCurrentSubPage(true);
+          return;
+        }
+
+        // 2. Check if drill-down setting row clicked
+        const row = e.target.closest('[data-open-sub]');
+        if (row) {
+          // Do not open subpage if clicking directly on a form element
+          if (e.target.closest('input, select, label.ios-toggle, a')) return;
+          const subId = row.getAttribute('data-open-sub');
+          if (subId) {
+            e.preventDefault();
+            e.stopPropagation();
+            openSubPage(subId);
+          }
+        }
+      });
+    }
+
+    // Direct event listener fallback on rows
     document.querySelectorAll('[data-open-sub]').forEach(item => {
       item.addEventListener('click', (e) => {
-        if (e.target.closest('input, select, button:not(.settings-chevron)')) return;
+        if (e.target.closest('input, select, label.ios-toggle, a')) return;
         const subId = item.getAttribute('data-open-sub');
         if (subId) {
           openSubPage(subId);
@@ -1447,9 +1491,9 @@
       });
     });
 
-    // Attach click listeners to back buttons
     document.querySelectorAll('[data-back]').forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
         closeCurrentSubPage(true);
       });
     });
