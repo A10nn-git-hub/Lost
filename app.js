@@ -669,6 +669,7 @@
     if (!floatingDock || !pill || dockButtons.length === 0) return;
 
     let isDragging = false;
+    let justFinishedDrag = false;
     let startPointerX = 0;
     let startPointerY = 0;
     let startPillX = 0;
@@ -676,6 +677,23 @@
     let activeIndex = 0;
     let hoveredIndex = 0;
     let hasMoved = false;
+    let downBtn = null;
+
+    // Helper to find button closest to an X coordinate
+    function getButtonAtX(clientX) {
+      let bestIdx = 0;
+      let minDiff = Infinity;
+      dockButtons.forEach((btn, idx) => {
+        const rect = btn.getBoundingClientRect();
+        const center = rect.left + rect.width / 2;
+        const diff = Math.abs(clientX - center);
+        if (diff < minDiff) {
+          minDiff = diff;
+          bestIdx = idx;
+        }
+      });
+      return bestIdx;
+    }
 
     // Switch Tab Content View
     function switchTab(targetTab, shouldHaptic = true) {
@@ -723,6 +741,17 @@
       pill.style.transform = `translate3d(${targetBtn.offsetLeft}px, 0, 0) scale(1, 1)`;
     }
 
+    // Direct Click Handlers on each Tab Button (Instant Tap Guarantee)
+    dockButtons.forEach((btn, idx) => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (justFinishedDrag) return;
+        snapPillToTab(idx, true);
+        const targetTab = btn.getAttribute('data-tab');
+        switchTab(targetTab, true);
+      });
+    });
+
     // Drag / Touch Gesture Handling
     floatingDock.addEventListener('pointerdown', (e) => {
       if (e.button !== undefined && e.button !== 0) return;
@@ -731,12 +760,25 @@
       startPointerY = e.clientY;
       hasMoved = false;
       isDragging = true;
+      justFinishedDrag = false;
 
-      activeIndex = dockButtons.findIndex(b => b.getAttribute('data-tab') === state.currentTab);
-      if (activeIndex < 0) activeIndex = 0;
-      hoveredIndex = activeIndex;
+      // Determine clicked button directly under finger/cursor
+      downBtn = e.target.closest('.dock-btn');
+      if (!downBtn) {
+        const atIdx = getButtonAtX(e.clientX);
+        downBtn = dockButtons[atIdx];
+      }
 
-      startPillX = dockButtons[activeIndex].offsetLeft;
+      const clickedIdx = dockButtons.indexOf(downBtn);
+      if (clickedIdx >= 0) {
+        hoveredIndex = clickedIdx;
+        startPillX = dockButtons[clickedIdx].offsetLeft;
+      } else {
+        activeIndex = dockButtons.findIndex(b => b.getAttribute('data-tab') === state.currentTab);
+        if (activeIndex < 0) activeIndex = 0;
+        hoveredIndex = activeIndex;
+        startPillX = dockButtons[activeIndex].offsetLeft;
+      }
       currentPillX = startPillX;
 
       try {
@@ -758,7 +800,7 @@
       const deltaX = e.clientX - startPointerX;
       const deltaY = e.clientY - startPointerY;
 
-      if (!hasMoved && (Math.abs(deltaX) > 4 || Math.abs(deltaY) > 4)) {
+      if (!hasMoved && (Math.abs(deltaX) > 6 || Math.abs(deltaY) > 6)) {
         hasMoved = true;
         triggerHaptic('light');
       }
@@ -860,15 +902,25 @@
         floatingDock.releasePointerCapture(e.pointerId);
       } catch (err) {}
 
-      let targetIndex = hoveredIndex;
+      let targetIndex = -1;
 
-      // If it was a quick tap without significant dragging (< 5px)
+      // If it was a quick tap without significant dragging (< 6px)
       if (!hasMoved) {
-        const tappedBtn = e.target.closest('.dock-btn');
-        if (tappedBtn) {
-          targetIndex = dockButtons.indexOf(tappedBtn);
-          if (targetIndex < 0) targetIndex = activeIndex;
+        if (downBtn) {
+          targetIndex = dockButtons.indexOf(downBtn);
         }
+        if (targetIndex < 0) {
+          targetIndex = getButtonAtX(e.clientX);
+        }
+      } else {
+        // Dragging gesture finished
+        justFinishedDrag = true;
+        setTimeout(() => { justFinishedDrag = false; }, 100);
+        targetIndex = hoveredIndex;
+      }
+
+      if (targetIndex < 0 || targetIndex >= dockButtons.length) {
+        targetIndex = activeIndex;
       }
 
       // Magnetic snap with rubber spring animation
@@ -876,11 +928,7 @@
 
       // Trigger tab switch
       const targetTab = dockButtons[targetIndex].getAttribute('data-tab');
-      if (targetTab !== state.currentTab) {
-        switchTab(targetTab, true);
-      } else {
-        triggerHaptic('selection');
-      }
+      switchTab(targetTab, true);
     };
 
     floatingDock.addEventListener('pointerup', endDrag);
