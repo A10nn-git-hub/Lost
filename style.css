@@ -846,3 +846,120 @@ input:checked + .ios-slider:before {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* ==========================================================================
+   Extended Themes & Settings Styles
+   ========================================================================== */
+
+/* Dynamic Accent Themes */
+body[data-theme="sapphire"] {
+  --color-active: #3b82f6;
+  --color-active-glow: rgba(59, 130, 246, 0.35);
+}
+body[data-theme="sapphire"] .segment-on {
+  background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%);
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
+}
+
+body[data-theme="amethyst"] {
+  --color-active: #a855f7;
+  --color-active-glow: rgba(168, 85, 247, 0.35);
+}
+body[data-theme="amethyst"] .segment-on {
+  background: linear-gradient(180deg, #a855f7 0%, #9333ea 100%);
+  box-shadow: 0 0 10px rgba(168, 85, 247, 0.4);
+}
+
+body[data-theme="sunset"] {
+  --color-active: #f97316;
+  --color-active-glow: rgba(249, 115, 22, 0.35);
+}
+body[data-theme="sunset"] .segment-on {
+  background: linear-gradient(180deg, #f97316 0%, #ea580c 100%);
+  box-shadow: 0 0 10px rgba(249, 115, 22, 0.4);
+}
+
+body[data-theme="rose"] {
+  --color-active: #ec4899;
+  --color-active-glow: rgba(236, 72, 153, 0.35);
+}
+body[data-theme="rose"] .segment-on {
+  background: linear-gradient(180deg, #ec4899 0%, #db2777 100%);
+  box-shadow: 0 0 10px rgba(236, 72, 153, 0.4);
+}
+
+/* Spring Physics Modes */
+body[data-spring="snappy"] {
+  --spring-ease: cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+body[data-spring="smooth"] {
+  --spring-ease: cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/* Ambient glow hide */
+body.hide-ambient .ambient-glow {
+  display: none !important;
+}
+
+/* Compact Density */
+body.density-compact .glass-card {
+  padding: 13px 15px;
+  margin-bottom: 11px;
+}
+body.density-compact .big-stat {
+  font-size: 36px;
+}
+body.density-compact .timeline-bar {
+  height: 30px;
+}
+body.density-compact .session-item {
+  padding: 8px 12px;
+}
+
+/* Color Picker Circles */
+.color-picker-row {
+  display: flex;
+  gap: 12px;
+  padding: 4px 0;
+}
+.color-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: transform 0.25s var(--spring-ease), border-color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.color-circle:active {
+  transform: scale(0.85);
+}
+.color-circle.active {
+  border-color: #fff;
+  transform: scale(1.1);
+  box-shadow: 0 0 12px currentColor;
+}
+.color-circle.active::after {
+  content: "✓";
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.device-selector-badge {
+  cursor: pointer;
+  padding: 3px 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  transition: background 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.device-selector-badge:active {
+  background: rgba(255, 255, 255, 0.15);
+}
+

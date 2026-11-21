@@ -1,12 +1,27 @@
 /**
  * LaptopTime Mini App - Core Interactive Application
  * iOS Liquid Glass & Tactile Micro-Interactions
+ *
+ * Implements all 13 agreed advanced settings:
+ * 13: Accent Themes (Emerald, Sapphire, Amethyst, Sunset, Rose)
+ * 14: Glass Blur intensity slider (10-40px)
+ * 15: Density selector (Comfortable / Compact)
+ * 16: Spring Physics (Rubber, Snappy, Smooth)
+ * 17: Ambient Glow Orbs toggle
+ * 18: Duration Format (Human / Exact)
+ * 19: Ignore Micro-Wakeups (< 2 min filter)
+ * 20: Smart Session Merge (0, 2, 5 min pause merging)
+ * 21: Hibernate interpretation (Cyan separate vs Off)
+ * 22: Timeline View Mode (Full 24h vs Active Work-hours)
+ * 23: Data Retention period (14, 30, 90, All days)
+ * 25: Auto backup to Telegram toggle
+ * 27: Multi-PC device profile switcher
  */
 
 (function () {
   'use strict';
 
-  // State Management
+  // Global Application State
   const state = {
     currentTab: 'today',
     selectedDateKey: null,
@@ -18,8 +33,20 @@
       dailyTargetHours: 8,
       breakReminder: true,
       hapticFeedback: true,
-      glassBlur: 'high',
-      timezone: 'MSK'
+      // 13 Advanced Settings
+      accentColor: 'emerald',      // 13
+      glassBlur: 24,               // 14
+      density: 'comfortable',      // 15
+      springPhysics: 'rubber',     // 16
+      ambientGlow: true,           // 17
+      durationFormat: 'human',     // 18
+      ignoreMicro: true,           // 19
+      sessionMerge: 5,             // 20
+      hibernateMode: 'cyan',       // 21
+      timelineMode: 'full',        // 22
+      dataRetention: '30',         // 23
+      autoBackup: true,            // 25
+      activeDevice: 'primary'      // 27
     }
   };
 
@@ -33,7 +60,7 @@
       tg.setBackgroundColor('#0a0e17');
       document.body.classList.add('telegram-theme');
     } catch (e) {
-      console.warn("Telegram WebApp API init:", e);
+      console.warn('Telegram WebApp API init:', e);
     }
   }
 
@@ -51,7 +78,7 @@
     } catch (e) {}
   }
 
-  // Utilities
+  // Duration Formatting Helpers
   function formatSecondsHuman(sec) {
     if (!sec || sec <= 0) return '0м';
     const hrs = Math.floor(sec / 3600);
@@ -74,9 +101,202 @@
     banner.innerHTML = `<span>${icon}</span> <span>${text}</span>`;
     banner.classList.add('show');
     triggerHaptic('success');
-    setTimeout(() => {
+    clearTimeout(banner._toastTimer);
+    banner._toastTimer = setTimeout(() => {
       banner.classList.remove('show');
-    }, 2600);
+    }, 2400);
+  }
+
+  // Process raw day data according to active filters (Micro-wakeups, Smart Merge, Hibernate)
+  function getProcessedDay(rawDay) {
+    if (!rawDay) return null;
+    const day = JSON.parse(JSON.stringify(rawDay));
+    let sessions = day.sessions || [];
+
+    // Setting 21: Hibernate interpretation
+    if (state.settings.hibernateMode === 'off') {
+      sessions.forEach(s => {
+        if (s.state === 'гибернация') s.state = 'выключен';
+      });
+      if (day.currentState === 'гибернация') {
+        day.currentState = 'выключен';
+      }
+    }
+
+    // Setting 19: Ignore micro-wakeups (< 2 minutes = 120s)
+    if (state.settings.ignoreMicro && sessions.length > 1) {
+      const filtered = [];
+      for (let i = 0; i < sessions.length; i++) {
+        const s = sessions[i];
+        const isLastSession = (i === sessions.length - 1);
+        if (s.state === 'включен' && s.durationSeconds < 120 && !isLastSession) {
+          const prev = filtered[filtered.length - 1];
+          const next = sessions[i + 1];
+          if (prev) {
+            prev.end = s.end;
+            prev.endMinute = s.endMinute;
+            prev.durationSeconds += s.durationSeconds;
+            prev.duration = formatSecondsExact(prev.durationSeconds);
+            continue;
+          } else if (next) {
+            s.state = next.state;
+          }
+        }
+        filtered.push(s);
+      }
+      sessions = filtered;
+    }
+
+    // Setting 20: Smart session merging (merge short pause <= N minutes)
+    const mergeThresholdSec = (parseInt(state.settings.sessionMerge, 10) || 0) * 60;
+    if (mergeThresholdSec > 0 && sessions.length > 2) {
+      const merged = [];
+      for (let i = 0; i < sessions.length; i++) {
+        const curr = sessions[i];
+        if (
+          merged.length > 0 &&
+          curr.state === 'сон' &&
+          curr.durationSeconds <= mergeThresholdSec &&
+          i < sessions.length - 1 &&
+          merged[merged.length - 1].state === 'включен' &&
+          sessions[i + 1].state === 'включен'
+        ) {
+          const prev = merged[merged.length - 1];
+          const next = sessions[i + 1];
+          prev.end = next.end;
+          prev.endMinute = next.endMinute;
+          prev.durationSeconds += curr.durationSeconds + next.durationSeconds;
+          prev.duration = formatSecondsExact(prev.durationSeconds);
+          i++; // Skip merged next session
+          continue;
+        }
+        merged.push(curr);
+      }
+      sessions = merged;
+    }
+
+    // Consolidate adjacent identical states
+    const consolidated = [];
+    for (const s of sessions) {
+      if (consolidated.length > 0 && consolidated[consolidated.length - 1].state === s.state) {
+        const prev = consolidated[consolidated.length - 1];
+        prev.end = s.end;
+        prev.endMinute = s.endMinute;
+        prev.durationSeconds += s.durationSeconds;
+        prev.duration = formatSecondsExact(prev.durationSeconds);
+      } else {
+        consolidated.push(s);
+      }
+    }
+    day.sessions = consolidated;
+
+    // Recalculate summary metrics from updated sessions
+    let activeSec = 0;
+    let sleepSec = 0;
+    let hibernateSec = 0;
+    let offSec = 0;
+
+    consolidated.forEach(s => {
+      if (s.state === 'включен') activeSec += s.durationSeconds;
+      else if (s.state === 'сон') sleepSec += s.durationSeconds;
+      else if (s.state === 'гибернация') hibernateSec += s.durationSeconds;
+      else offSec += s.durationSeconds;
+    });
+
+    day.activeSeconds = activeSec;
+    day.sleepSeconds = sleepSec;
+    day.hibernateSeconds = hibernateSec;
+    day.offSeconds = offSec;
+
+    return day;
+  }
+
+  // Device UI Sync Helper
+  function updateDeviceUI(deviceKey) {
+    const deviceTitle = document.getElementById('deviceTitle');
+    const deviceBadge = document.getElementById('deviceSelectorBtn');
+    const deviceSelect = document.getElementById('settingActiveDevice');
+
+    if (deviceKey === 'desktop') {
+      if (deviceTitle) deviceTitle.textContent = 'Домашний ПК';
+      if (deviceBadge) deviceBadge.textContent = '🖥 ПК ▼';
+    } else {
+      const defaultName = state.timelineData?.device || 'Мой Ноутбук';
+      if (deviceTitle) deviceTitle.textContent = defaultName;
+      if (deviceBadge) deviceBadge.textContent = '💻 Ноутбук ▼';
+    }
+    if (deviceSelect) deviceSelect.value = deviceKey;
+  }
+
+  // Visual Theme & UI Application
+  function applyVisualSettings() {
+    // 13: Accent Theme
+    const theme = state.settings.accentColor || 'emerald';
+    if (theme === 'emerald') {
+      document.body.removeAttribute('data-theme');
+    } else {
+      document.body.setAttribute('data-theme', theme);
+    }
+    document.querySelectorAll('.color-circle').forEach(circle => {
+      circle.classList.toggle('active', circle.getAttribute('data-color') === theme);
+    });
+
+    // 14: Glass Blur
+    const blur = state.settings.glassBlur || 24;
+    document.documentElement.style.setProperty('--glass-blur', `${blur}px`);
+    const blurLabel = document.getElementById('blurValLabel');
+    if (blurLabel) blurLabel.textContent = `${blur}px`;
+    const blurInput = document.getElementById('settingGlassBlur');
+    if (blurInput) blurInput.value = blur;
+
+    // 15: Density
+    const isCompact = state.settings.density === 'compact';
+    document.body.classList.toggle('density-compact', isCompact);
+    const densitySelect = document.getElementById('settingDensity');
+    if (densitySelect) densitySelect.value = state.settings.density || 'comfortable';
+
+    // 16: Spring Physics
+    const spring = state.settings.springPhysics || 'rubber';
+    document.body.setAttribute('data-spring', spring);
+    const springSelect = document.getElementById('settingSpring');
+    if (springSelect) springSelect.value = spring;
+
+    // 17: Ambient Glow
+    const showGlow = state.settings.ambientGlow !== false;
+    document.body.classList.toggle('hide-ambient', !showGlow);
+    const glowToggle = document.getElementById('settingAmbientGlow');
+    if (glowToggle) glowToggle.checked = showGlow;
+
+    // 18: Duration Format select
+    const durFormatSelect = document.getElementById('settingDurationFormat');
+    if (durFormatSelect) durFormatSelect.value = state.settings.durationFormat || 'human';
+
+    // 19: Ignore Micro
+    const ignoreMicroToggle = document.getElementById('settingIgnoreMicro');
+    if (ignoreMicroToggle) ignoreMicroToggle.checked = state.settings.ignoreMicro !== false;
+
+    // 20: Session Merge
+    const sessionMergeSelect = document.getElementById('settingSessionMerge');
+    if (sessionMergeSelect) sessionMergeSelect.value = (state.settings.sessionMerge !== undefined ? state.settings.sessionMerge : 5).toString();
+
+    // 21: Hibernate Mode
+    const hibSelect = document.getElementById('settingHibernateMode');
+    if (hibSelect) hibSelect.value = state.settings.hibernateMode || 'cyan';
+
+    // 22: Timeline Mode
+    const tlModeSelect = document.getElementById('settingTimelineMode');
+    if (tlModeSelect) tlModeSelect.value = state.settings.timelineMode || 'full';
+
+    // 23: Data Retention
+    const retentionSelect = document.getElementById('settingDataRetention');
+    if (retentionSelect) retentionSelect.value = state.settings.dataRetention || '30';
+
+    // 25: Auto Backup
+    const backupToggle = document.getElementById('settingAutoBackup');
+    if (backupToggle) backupToggle.checked = state.settings.autoBackup !== false;
+
+    // 27: Device
+    updateDeviceUI(state.settings.activeDevice || 'primary');
   }
 
   // Load Settings from LocalStorage
@@ -88,7 +308,7 @@
       }
     } catch (e) {}
 
-    // Populate UI inputs
+    // Populate standard controls
     const reportTimeInput = document.getElementById('settingReportTime');
     if (reportTimeInput) reportTimeInput.value = state.settings.reportTime;
 
@@ -107,6 +327,8 @@
 
     const hapticToggle = document.getElementById('settingHaptic');
     if (hapticToggle) hapticToggle.checked = state.settings.hapticFeedback;
+
+    applyVisualSettings();
   }
 
   function saveSettings() {
@@ -115,9 +337,20 @@
     } catch (e) {}
   }
 
+  // Re-render current active screen
+  function refreshCurrentScreen() {
+    const dates = Object.keys(state.timelineData?.days || {}).sort().reverse();
+    if (dates.length > 0) {
+      renderDay(dates[0], 'today');
+      if (state.selectedDateKey) {
+        renderDay(state.selectedDateKey, 'history');
+      }
+    }
+  }
+
   // Data Loading (supports local window.LOCAL_TIMELINE_DATA and fetch)
   async function loadData() {
-    // 1. Try local memory store first (instant, 0 CORS issues)
+    // 1. Try local memory store first (instant, 0 network latency, 0 CORS)
     if (window.LOCAL_TIMELINE_DATA && window.LOCAL_TIMELINE_DATA.days) {
       state.timelineData = window.LOCAL_TIMELINE_DATA;
       return state.timelineData;
@@ -132,7 +365,7 @@
       }
     } catch (e) {}
 
-    // 3. Fallback dummy structure if file empty
+    // 3. Fallback dummy data if nothing loaded
     const todayStr = new Date().toISOString().split('T')[0];
     state.timelineData = {
       updatedAt: new Date().toISOString(),
@@ -162,22 +395,22 @@
     return state.timelineData;
   }
 
-  // Render Day Screen
+  // Render Day Screen with All Processed Filters & Settings
   function renderDay(dateKey, containerPrefix = 'today') {
     if (!state.timelineData?.days) return;
-    const day = state.timelineData.days[dateKey];
-    if (!day) return;
+    const rawDay = state.timelineData.days[dateKey];
+    if (!rawDay) return;
 
-    // Device / User Header
+    // Apply data filters (micro wakeups, merge pauses, hibernate interpretation)
+    const day = getProcessedDay(rawDay);
+
+    // Header Greeting & Device
     const userBadge = document.getElementById('userGreeting');
     if (userBadge) {
       const tgUser = tg?.initDataUnsafe?.user?.first_name || 'Артемий';
       userBadge.textContent = `Привет, ${tgUser}`;
     }
-    const deviceName = document.getElementById('deviceTitle');
-    if (deviceName && state.timelineData.device) {
-      deviceName.textContent = state.timelineData.device;
-    }
+    updateDeviceUI(state.settings.activeDevice || 'primary');
 
     // Status pill
     const statusPill = document.getElementById(`${containerPrefix}StatusPill`);
@@ -197,12 +430,18 @@
       }
     }
 
-    // Big Active Stats
+    // Setting 18: Duration Format (Human vs Exact)
     const bigStat = document.getElementById(`${containerPrefix}BigStat`);
-    if (bigStat) bigStat.textContent = formatSecondsHuman(day.activeSeconds);
-
     const bigStatExact = document.getElementById(`${containerPrefix}BigStatExact`);
-    if (bigStatExact) bigStatExact.textContent = formatSecondsExact(day.activeSeconds);
+    if (bigStat && bigStatExact) {
+      if (state.settings.durationFormat === 'exact') {
+        bigStat.textContent = formatSecondsExact(day.activeSeconds);
+        bigStatExact.textContent = formatSecondsHuman(day.activeSeconds);
+      } else {
+        bigStat.textContent = formatSecondsHuman(day.activeSeconds);
+        bigStatExact.textContent = formatSecondsExact(day.activeSeconds);
+      }
+    }
 
     // Daily Target Progress
     const targetSeconds = (state.settings.dailyTargetHours || 8) * 3600;
@@ -221,18 +460,69 @@
     if (lastEvent) lastEvent.textContent = day.lastEvent || '—';
 
     const sleepDuration = document.getElementById(`${containerPrefix}SleepDuration`);
-    if (sleepDuration) sleepDuration.textContent = formatSecondsHuman(day.sleepSeconds + day.hibernateSeconds);
+    if (sleepDuration) {
+      const totalSleepSec = day.sleepSeconds + day.hibernateSeconds;
+      sleepDuration.textContent = state.settings.durationFormat === 'exact'
+        ? formatSecondsExact(totalSleepSec)
+        : formatSecondsHuman(totalSleepSec);
+    }
 
     const offDuration = document.getElementById(`${containerPrefix}OffDuration`);
-    if (offDuration) offDuration.textContent = formatSecondsHuman(day.offSeconds);
+    if (offDuration) {
+      offDuration.textContent = state.settings.durationFormat === 'exact'
+        ? formatSecondsExact(day.offSeconds)
+        : formatSecondsHuman(day.offSeconds);
+    }
 
-    // 24-Hour Timeline Bar Rendering
+    // Setting 22: Timeline View Mode (Full 24h vs Active Work-hours)
     const timelineBar = document.getElementById(`${containerPrefix}TimelineBar`);
+    const hoursRuler = timelineBar?.parentElement?.querySelector('.hours-ruler');
     if (timelineBar) {
       timelineBar.innerHTML = '';
-      const totalMinutes = 1440; // 24 hours
 
-      (day.sessions || []).forEach((session, idx) => {
+      let startMin = 0;
+      let endMin = 1440;
+      let totalMinutes = 1440;
+
+      if (state.settings.timelineMode === 'work') {
+        const activeSessions = (day.sessions || []).filter(s => s.state === 'включен');
+        if (activeSessions.length > 0) {
+          const minAct = Math.min(...activeSessions.map(s => s.startMinute));
+          const maxAct = Math.max(...activeSessions.map(s => s.endMinute));
+          startMin = Math.max(0, Math.floor((minAct - 60) / 60) * 60); // 1 hr before first active
+          endMin = Math.min(1440, Math.ceil((maxAct + 60) / 60) * 60); // 1 hr after last active
+          if (endMin - startMin < 360) {
+            endMin = Math.min(1440, startMin + 360); // min 6 hours span
+          }
+        } else {
+          startMin = 480; // 08:00
+          endMin = 1200;  // 20:00
+        }
+        totalMinutes = endMin - startMin;
+      }
+
+      // Update Hours Ruler labels dynamically
+      if (hoursRuler) {
+        hoursRuler.innerHTML = '';
+        const step = state.settings.timelineMode === 'work'
+          ? Math.max(60, Math.round(totalMinutes / 60 / 5) * 60)
+          : 180;
+        for (let m = startMin; m <= endMin; m += step) {
+          const span = document.createElement('span');
+          span.className = 'ruler-hour';
+          const hh = Math.floor(m / 60).toString().padStart(2, '0');
+          const mm = (m % 60).toString().padStart(2, '0');
+          span.textContent = `${hh}:${mm}`;
+          hoursRuler.appendChild(span);
+        }
+      }
+
+      // Render timeline segments
+      (day.sessions || []).forEach((session) => {
+        const segStart = Math.max(startMin, session.startMinute);
+        const segEnd = Math.min(endMin, session.endMinute);
+        if (segEnd <= segStart) return;
+
         const seg = document.createElement('div');
         seg.className = 'timeline-segment';
 
@@ -242,12 +532,9 @@
         else if (session.state === 'гибернация') seg.classList.add('segment-hibernate');
         else seg.classList.add('segment-off');
 
-        // Width in percentage
-        const durationMin = session.endMinute - session.startMinute;
-        const widthPercent = (durationMin / totalMinutes) * 100;
+        const widthPercent = ((segEnd - segStart) / totalMinutes) * 100;
         seg.style.width = `${Math.max(0.25, widthPercent)}%`;
 
-        // Interactivity: tap/click for floating tooltip
         seg.addEventListener('click', (e) => {
           e.stopPropagation();
           triggerHaptic('light');
@@ -292,9 +579,9 @@
     }
   }
 
-  // Floating Tooltip for 24-Hour Bar
+  // Floating Segment Tooltip
   function showSegmentTooltip(segmentEl, session, containerPrefix) {
-    let tooltip = document.getElementById(`${containerPrefix}Tooltip`);
+    const tooltip = document.getElementById(`${containerPrefix}Tooltip`);
     if (!tooltip) return;
 
     tooltip.innerHTML = `
@@ -314,16 +601,26 @@
     }, 3200);
   }
 
-  // Render History Days Selector Chips
+  // Render History Days Selector Chips (Respects Setting 23: Data Retention)
   function renderHistoryChips() {
     const chipContainer = document.getElementById('historyDaysScroll');
     if (!chipContainer || !state.timelineData?.days) return;
 
     chipContainer.innerHTML = '';
-    const sortedDates = Object.keys(state.timelineData.days).sort().reverse();
+    const allDates = Object.keys(state.timelineData.days).sort().reverse();
 
-    sortedDates.forEach((dateKey, index) => {
-      const day = state.timelineData.days[dateKey];
+    // Setting 23: Data Retention filter
+    let sortedDates = allDates;
+    if (state.settings.dataRetention !== 'all') {
+      const limit = parseInt(state.settings.dataRetention, 10);
+      if (!isNaN(limit)) {
+        sortedDates = allDates.slice(0, limit);
+      }
+    }
+
+    sortedDates.forEach((dateKey) => {
+      const rawDay = state.timelineData.days[dateKey];
+      const day = getProcessedDay(rawDay);
       const chip = document.createElement('div');
       chip.className = 'day-chip';
       if (dateKey === state.selectedDateKey) chip.classList.add('active');
@@ -351,14 +648,16 @@
       chipContainer.appendChild(chip);
     });
 
-    // Select first chip by default if not set
+    // Select first chip by default if needed
     if (!state.selectedDateKey && sortedDates.length > 0) {
       state.selectedDateKey = sortedDates[0];
-      const firstChip = chipContainer.children[0];
-      if (firstChip) firstChip.classList.add('active');
+    }
+    if (sortedDates.includes(state.selectedDateKey)) {
       renderDay(state.selectedDateKey, 'history');
       const titleEl = document.getElementById('historySelectedDateTitle');
-      if (titleEl) titleEl.textContent = `Активность за ${state.timelineData.days[state.selectedDateKey].displayDate}`;
+      if (titleEl && state.timelineData.days[state.selectedDateKey]) {
+        titleEl.textContent = `Активность за ${state.timelineData.days[state.selectedDateKey].displayDate}`;
+      }
     }
   }
 
@@ -373,16 +672,16 @@
         triggerHaptic('medium');
         state.currentTab = targetTab;
 
-        // Switch button states
+        // Switch button active styles
         dockButtons.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
 
-        // Switch tab views
+        // Switch active tab view
         document.querySelectorAll('.tab-content').forEach(view => view.classList.remove('active'));
         const activeView = document.getElementById(`tab-${targetTab}`);
         if (activeView) activeView.classList.add('active');
 
-        // Window scroll to top smoothly
+        // Scroll to top
         window.scrollTo({ top: 0, behavior: 'smooth' });
 
         if (targetTab === 'history') {
@@ -409,9 +708,205 @@
     });
   }
 
-  // Settings Events
+  // Settings Event Handlers (Wiring all 13 features)
   function initSettings() {
-    // Report Time Picker
+    // 13: Accent Themes Color Circles
+    document.querySelectorAll('.color-circle').forEach(circle => {
+      circle.addEventListener('click', () => {
+        const color = circle.getAttribute('data-color');
+        state.settings.accentColor = color;
+        saveSettings();
+        applyVisualSettings();
+        triggerHaptic('medium');
+        const colorNames = {
+          emerald: 'Изумрудный',
+          sapphire: 'Сапфировый',
+          amethyst: 'Аметистовый',
+          sunset: 'Закатный',
+          rose: 'Неоново-розовый'
+        };
+        showToast(`Цвет темы: ${colorNames[color] || color}`, '🎨');
+      });
+    });
+
+    // 14: Glass Blur Intensity Slider
+    const blurSlider = document.getElementById('settingGlassBlur');
+    const blurLabel = document.getElementById('blurValLabel');
+    if (blurSlider) {
+      blurSlider.addEventListener('input', (e) => {
+        const val = parseInt(e.target.value, 10);
+        state.settings.glassBlur = val;
+        document.documentElement.style.setProperty('--glass-blur', `${val}px`);
+        if (blurLabel) blurLabel.textContent = `${val}px`;
+        saveSettings();
+      });
+    }
+
+    // 15: Density Selector
+    const densitySelect = document.getElementById('settingDensity');
+    if (densitySelect) {
+      densitySelect.addEventListener('change', (e) => {
+        state.settings.density = e.target.value;
+        saveSettings();
+        applyVisualSettings();
+        triggerHaptic('selection');
+        showToast(e.target.value === 'compact' ? 'Компактный режим' : 'Комфортный режим', '📐');
+      });
+    }
+
+    // 16: Spring Physics Selector
+    const springSelect = document.getElementById('settingSpring');
+    if (springSelect) {
+      springSelect.addEventListener('change', (e) => {
+        state.settings.springPhysics = e.target.value;
+        saveSettings();
+        applyVisualSettings();
+        triggerHaptic('selection');
+        showToast(`Физика: ${e.target.options[e.target.selectedIndex].text}`, '🧲');
+      });
+    }
+
+    // 17: Ambient Glow Toggle
+    const glowToggle = document.getElementById('settingAmbientGlow');
+    if (glowToggle) {
+      glowToggle.addEventListener('change', (e) => {
+        state.settings.ambientGlow = e.target.checked;
+        saveSettings();
+        applyVisualSettings();
+        triggerHaptic('light');
+        showToast(e.target.checked ? 'Фоновое свечение включено' : 'Свечение выключено', '✨');
+      });
+    }
+
+    // 18: Duration Format Selector
+    const durFormatSelect = document.getElementById('settingDurationFormat');
+    if (durFormatSelect) {
+      durFormatSelect.addEventListener('change', (e) => {
+        state.settings.durationFormat = e.target.value;
+        saveSettings();
+        refreshCurrentScreen();
+        triggerHaptic('selection');
+        showToast(e.target.value === 'exact' ? 'Формат: секунды (00:00:00)' : 'Формат: краткий (ч/м)', '⏱');
+      });
+    }
+
+    // 19: Ignore Micro-Wakeups Toggle
+    const ignoreMicroToggle = document.getElementById('settingIgnoreMicro');
+    if (ignoreMicroToggle) {
+      ignoreMicroToggle.addEventListener('change', (e) => {
+        state.settings.ignoreMicro = e.target.checked;
+        saveSettings();
+        refreshCurrentScreen();
+        triggerHaptic('light');
+        showToast(e.target.checked ? 'Микро-пробуждения (<2м) отсечены' : 'Учитываются все пробуждения', '🔍');
+      });
+    }
+
+    // 20: Smart Session Merge Selector
+    const sessionMergeSelect = document.getElementById('settingSessionMerge');
+    if (sessionMergeSelect) {
+      sessionMergeSelect.addEventListener('change', (e) => {
+        state.settings.sessionMerge = parseInt(e.target.value, 10);
+        saveSettings();
+        refreshCurrentScreen();
+        triggerHaptic('selection');
+        showToast(e.target.value === '0' ? 'Склейка отключена' : `Склейка пауз до ${e.target.value}м`, '🔗');
+      });
+    }
+
+    // 21: Hibernate Interpretation Selector
+    const hibSelect = document.getElementById('settingHibernateMode');
+    if (hibSelect) {
+      hibSelect.addEventListener('change', (e) => {
+        state.settings.hibernateMode = e.target.value;
+        saveSettings();
+        refreshCurrentScreen();
+        triggerHaptic('selection');
+        showToast(e.target.value === 'off' ? 'Гибернация считается выключением' : 'Гибернация отображается отдельно', '🧊');
+      });
+    }
+
+    // 22: Timeline View Mode Selector
+    const tlModeSelect = document.getElementById('settingTimelineMode');
+    if (tlModeSelect) {
+      tlModeSelect.addEventListener('change', (e) => {
+        state.settings.timelineMode = e.target.value;
+        saveSettings();
+        refreshCurrentScreen();
+        triggerHaptic('selection');
+        showToast(e.target.value === 'work' ? 'Шкала: только активные часы' : 'Шкала: полные 24 часа', '📊');
+      });
+    }
+
+    // 23: Data Retention Period Selector
+    const retentionSelect = document.getElementById('settingDataRetention');
+    if (retentionSelect) {
+      retentionSelect.addEventListener('change', (e) => {
+        state.settings.dataRetention = e.target.value;
+        saveSettings();
+        renderHistoryChips();
+        triggerHaptic('selection');
+        showToast(`Архив: ${e.target.options[e.target.selectedIndex].text}`, '📅');
+      });
+    }
+
+    // 25: Auto Backup to Telegram Toggle
+    const backupToggle = document.getElementById('settingAutoBackup');
+    if (backupToggle) {
+      backupToggle.addEventListener('change', (e) => {
+        state.settings.autoBackup = e.target.checked;
+        saveSettings();
+        triggerHaptic('light');
+        showToast(e.target.checked ? 'Автобэкап в Telegram включен' : 'Автобэкап отключен', '💾');
+      });
+    }
+
+    // 27: Multi-PC Device Switcher
+    const deviceSelect = document.getElementById('settingActiveDevice');
+    const deviceSelectorBtn = document.getElementById('deviceSelectorBtn');
+
+    if (deviceSelect) {
+      deviceSelect.addEventListener('change', (e) => {
+        const val = e.target.value;
+        if (val === 'add') {
+          const newName = prompt('Введите название нового устройства (например, Рабочий ПК):');
+          if (newName && newName.trim()) {
+            const trimmed = newName.trim();
+            const newOpt = document.createElement('option');
+            newOpt.value = 'device_' + Date.now();
+            newOpt.textContent = `💻 ${trimmed}`;
+            deviceSelect.insertBefore(newOpt, deviceSelect.lastElementChild);
+            deviceSelect.value = newOpt.value;
+            state.settings.activeDevice = newOpt.value;
+            saveSettings();
+            updateDeviceUI(newOpt.value);
+            showToast(`Добавлено: ${trimmed}`, '💻');
+          } else {
+            deviceSelect.value = state.settings.activeDevice;
+          }
+        } else {
+          state.settings.activeDevice = val;
+          saveSettings();
+          updateDeviceUI(val);
+          triggerHaptic('selection');
+          showToast(`Устройство: ${deviceSelect.options[deviceSelect.selectedIndex].text}`, '💻');
+        }
+      });
+    }
+
+    // Header Device Badge Click - Quick Toggle
+    if (deviceSelectorBtn) {
+      deviceSelectorBtn.addEventListener('click', () => {
+        triggerHaptic('selection');
+        const next = state.settings.activeDevice === 'primary' ? 'desktop' : 'primary';
+        state.settings.activeDevice = next;
+        saveSettings();
+        updateDeviceUI(next);
+        showToast(`Устройство: ${next === 'desktop' ? 'Домашний ПК' : 'Мой Ноутбук'}`, '💻');
+      });
+    }
+
+    // Telegram Bot Notifications: Report Time
     const reportTime = document.getElementById('settingReportTime');
     if (reportTime) {
       reportTime.addEventListener('change', (e) => {
@@ -442,7 +937,6 @@
         state.settings.dailyTargetHours = val;
         if (targetLabel) targetLabel.textContent = `${val} ч`;
         saveSettings();
-        // Re-render today's progress bar immediately
         const todayKey = Object.keys(state.timelineData?.days || {}).sort().reverse()[0];
         if (todayKey) renderDay(todayKey, 'today');
       });
@@ -470,30 +964,33 @@
       });
     }
 
-
-
-    // Sync Now Button
-    const btnSyncNow = document.getElementById('btnSyncNow');
-    if (btnSyncNow) {
-      btnSyncNow.addEventListener('click', async () => {
-        triggerHaptic('medium');
+    // Sync Handlers (Header icon & Settings button)
+    const handleSync = async () => {
+      triggerHaptic('medium');
+      const btnSyncNow = document.getElementById('btnSyncNow');
+      if (btnSyncNow) {
         btnSyncNow.disabled = true;
         btnSyncNow.textContent = 'Синхронизация...';
+      }
 
-        await loadData();
-        const dates = Object.keys(state.timelineData?.days || {}).sort().reverse();
-        if (dates.length > 0) {
-          renderDay(dates[0], 'today');
-          renderHistoryChips();
-        }
+      await loadData();
+      refreshCurrentScreen();
+      renderHistoryChips();
 
-        setTimeout(() => {
+      setTimeout(() => {
+        if (btnSyncNow) {
           btnSyncNow.disabled = false;
           btnSyncNow.textContent = 'Синхронизировать сейчас';
-          showToast('Данные актуальны', '🔄');
-        }, 600);
-      });
-    }
+        }
+        showToast('Данные актуальны', '🔄');
+      }, 500);
+    };
+
+    const btnSyncNow = document.getElementById('btnSyncNow');
+    if (btnSyncNow) btnSyncNow.addEventListener('click', handleSync);
+
+    const btnSyncHeader = document.getElementById('btnSyncHeader');
+    if (btnSyncHeader) btnSyncHeader.addEventListener('click', handleSync);
 
     // Export JSON
     const btnExportJson = document.getElementById('btnExportJson');
@@ -535,7 +1032,7 @@
     }
   }
 
-  // App Initialization
+  // Application Initialization
   async function init() {
     loadSettings();
     initTabs();
@@ -545,15 +1042,12 @@
     const data = await loadData();
     const sortedDates = Object.keys(data.days || {}).sort().reverse();
     if (sortedDates.length > 0) {
-      // First date is today
       renderDay(sortedDates[0], 'today');
-      // Set history default
       state.selectedDateKey = sortedDates[0];
       renderHistoryChips();
     }
   }
 
-  // Boot up when DOM is ready
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
   } else {
