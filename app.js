@@ -306,6 +306,7 @@
 
     // 27: Device
     updateDeviceUI(state.settings.activeDevice || 'primary');
+    window._updateCustomSelectLabels?.();
   }
 
   // Load Settings from LocalStorage
@@ -1468,8 +1469,8 @@
         // 2. Check if drill-down setting row clicked
         const row = e.target.closest('[data-open-sub]');
         if (row) {
-          // Do not open subpage if clicking directly on a form element
-          if (e.target.closest('input, select, label.ios-toggle, a')) return;
+          // Do not open subpage if clicking directly on a form element or select trigger
+          if (e.target.closest('input, select, label.ios-toggle, .ios-custom-select, a')) return;
           const subId = row.getAttribute('data-open-sub');
           if (subId) {
             e.preventDefault();
@@ -1483,7 +1484,7 @@
     // Direct event listener fallback on rows
     document.querySelectorAll('[data-open-sub]').forEach(item => {
       item.addEventListener('click', (e) => {
-        if (e.target.closest('input, select, label.ios-toggle, a')) return;
+        if (e.target.closest('input, select, label.ios-toggle, .ios-custom-select, a')) return;
         const subId = item.getAttribute('data-open-sub');
         if (subId) {
           openSubPage(subId);
@@ -1500,6 +1501,176 @@
 
     // Initial label population
     updateRootValueLabels();
+  }
+
+  // iOS Liquid Glass Action Sheet Picker for <select> elements
+  function initCustomSelectPickers() {
+    let activeSelect = null;
+    let activeTrigger = null;
+
+    const overlay = document.getElementById('iosPickerOverlay');
+    const sheet = document.getElementById('iosPickerSheet');
+    const titleEl = document.getElementById('iosPickerTitle');
+    const subEl = document.getElementById('iosPickerSub');
+    const optionsContainer = document.getElementById('iosPickerOptions');
+    const closeBtn = document.getElementById('iosPickerCloseBtn');
+
+    if (!overlay || !sheet || !optionsContainer) return;
+
+    function openPicker(selectEl, triggerEl) {
+      activeSelect = selectEl;
+      activeTrigger = triggerEl;
+
+      // Extract title from parent row
+      const row = selectEl.closest('.settings-row, .settings-nav-row');
+      const title = row?.querySelector('.settings-label-main')?.textContent || 'Выберите вариант';
+      const sub = row?.querySelector('.settings-label-sub')?.textContent || 'Настройка приложения';
+
+      if (titleEl) titleEl.textContent = title;
+      if (subEl) subEl.textContent = sub;
+
+      // Populate options with authentic iOS checkmark items
+      optionsContainer.innerHTML = '';
+      Array.from(selectEl.options).forEach(opt => {
+        const item = document.createElement('div');
+        const isSelected = (opt.value === selectEl.value);
+        item.className = 'ios-picker-item' + (isSelected ? ' selected' : '');
+        item.setAttribute('data-value', opt.value);
+
+        const label = document.createElement('span');
+        label.className = 'ios-picker-item-label';
+        label.textContent = opt.text;
+        item.appendChild(label);
+
+        if (isSelected) {
+          const check = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+          check.setAttribute('class', 'ios-picker-check');
+          check.setAttribute('width', '20');
+          check.setAttribute('height', '20');
+          check.setAttribute('viewBox', '0 0 24 24');
+          check.setAttribute('fill', 'none');
+          check.innerHTML = '<path d="M20 6L9 17L4 12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>';
+          item.appendChild(check);
+        }
+
+        item.addEventListener('click', () => {
+          triggerHaptic('selection');
+          const val = opt.value;
+
+          // Update underlying select element
+          selectEl.value = val;
+          selectEl.dispatchEvent(new Event('change', { bubbles: true }));
+
+          // Update trigger label
+          if (activeTrigger) {
+            const lbl = activeTrigger.querySelector('.ios-custom-select-label');
+            if (lbl) lbl.textContent = opt.text;
+          }
+
+          // Visual feedback before dismissing
+          optionsContainer.querySelectorAll('.ios-picker-item').forEach(el => {
+            const match = (el.getAttribute('data-value') === val);
+            el.classList.toggle('selected', match);
+            const oldCheck = el.querySelector('.ios-picker-check');
+            if (oldCheck) oldCheck.remove();
+            if (match) {
+              const check = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+              check.setAttribute('class', 'ios-picker-check');
+              check.setAttribute('width', '20');
+              check.setAttribute('height', '20');
+              check.setAttribute('viewBox', '0 0 24 24');
+              check.setAttribute('fill', 'none');
+              check.innerHTML = '<path d="M20 6L9 17L4 12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>';
+              el.appendChild(check);
+            }
+          });
+
+          setTimeout(() => {
+            closePicker();
+          }, 140);
+        });
+
+        optionsContainer.appendChild(item);
+      });
+
+      overlay.classList.add('active');
+      triggerHaptic('light');
+    }
+
+    function closePicker() {
+      overlay.classList.remove('active');
+      if (activeTrigger) {
+        activeTrigger.classList.remove('active');
+      }
+      activeSelect = null;
+      activeTrigger = null;
+    }
+
+    // Backdrop dismissal
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) {
+        closePicker();
+      }
+    });
+
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => {
+        triggerHaptic('light');
+        closePicker();
+      });
+    }
+
+    // Convert each select.ios-select into custom trigger
+    document.querySelectorAll('select.ios-select').forEach(sel => {
+      let trigger = sel.nextElementSibling;
+      if (!trigger || !trigger.classList.contains('ios-custom-select')) {
+        trigger = document.createElement('div');
+        trigger.className = 'ios-custom-select';
+        trigger.setAttribute('data-select-id', sel.id);
+
+        const currentOpt = sel.options[sel.selectedIndex] || sel.options[0];
+        const labelText = currentOpt ? currentOpt.text : 'Выбрать';
+
+        trigger.innerHTML = `
+          <span class="ios-custom-select-label">${labelText}</span>
+          <svg class="ios-custom-select-arrow" width="9" height="6" viewBox="0 0 9 6" fill="none">
+            <path d="M1 1L4.5 4.5L8 1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        `;
+
+        sel.parentNode.insertBefore(trigger, sel.nextSibling);
+      }
+
+      sel.style.display = 'none';
+
+      trigger.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        trigger.classList.add('active');
+        openPicker(sel, trigger);
+      });
+
+      sel.addEventListener('change', () => {
+        const opt = sel.options[sel.selectedIndex];
+        const lbl = trigger.querySelector('.ios-custom-select-label');
+        if (lbl && opt) {
+          lbl.textContent = opt.text;
+        }
+      });
+    });
+
+    window._updateCustomSelectLabels = function () {
+      document.querySelectorAll('select.ios-select').forEach(sel => {
+        const trigger = sel.nextElementSibling;
+        if (trigger && trigger.classList.contains('ios-custom-select')) {
+          const opt = sel.options[sel.selectedIndex];
+          const lbl = trigger.querySelector('.ios-custom-select-label');
+          if (lbl && opt) {
+            lbl.textContent = opt.text;
+          }
+        }
+      });
+    };
   }
 
   // iOS Fluid Rubber Stretch & Physics Engine for All Elements
@@ -1731,6 +1902,7 @@
     initTimelineStretch();
     initSettings();
     initSettingsNavigation();
+    initCustomSelectPickers();
     initRubberPhysics();
 
     const data = await loadData();

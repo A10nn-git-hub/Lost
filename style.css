@@ -972,8 +972,64 @@ input:checked + .ios-slider:before {
   transform: translateX(20px);
 }
 
-/* iOS Input / Select */
-.ios-select, .ios-input {
+/* iOS Native Select Hidden in favor of Custom Glass Picker */
+.ios-select {
+  display: none !important;
+}
+
+/* iOS Custom Select Capsule Trigger */
+.ios-custom-select {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 7px 12px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s, border-color 0.2s, box-shadow 0.2s;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  max-width: 190px;
+}
+
+.ios-custom-select:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.ios-custom-select:active,
+.ios-custom-select.active {
+  background: rgba(255, 255, 255, 0.16);
+  transform: scale(0.96);
+  border-color: var(--color-active);
+  box-shadow: 0 0 12px var(--color-active-glow);
+}
+
+.ios-custom-select-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ios-custom-select-arrow {
+  width: 9px;
+  height: 6px;
+  stroke: rgba(255, 255, 255, 0.6);
+  flex-shrink: 0;
+  transition: transform 0.22s var(--spring-ease);
+}
+
+.ios-custom-select.active .ios-custom-select-arrow {
+  transform: rotate(180deg);
+}
+
+/* iOS Input */
+.ios-input {
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid var(--glass-border);
   color: #fff;
@@ -985,8 +1041,151 @@ input:checked + .ios-slider:before {
   transition: border-color 0.2s;
 }
 
-.ios-select:focus, .ios-input:focus {
+.ios-input:focus {
   border-color: var(--color-active);
+}
+
+/* ==========================================================================
+   iOS Liquid Glass Action Sheet Picker Modal
+   ========================================================================== */
+.ios-picker-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  z-index: 9999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.ios-picker-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.ios-picker-sheet {
+  width: 100%;
+  max-width: 460px;
+  background: rgba(16, 22, 34, 0.94);
+  backdrop-filter: blur(40px) saturate(200%);
+  -webkit-backdrop-filter: blur(40px) saturate(200%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-bottom: none;
+  border-radius: 28px 28px 0 0;
+  padding: 12px 18px 32px;
+  box-shadow: 0 -14px 45px rgba(0, 0, 0, 0.6), inset 0 1px 1px rgba(255, 255, 255, 0.2);
+  transform: translate3d(0, 100%, 0);
+  transition: transform 0.38s cubic-bezier(0.16, 1, 0.3, 1);
+  max-height: 82vh;
+  display: flex;
+  flex-direction: column;
+  overscroll-behavior: contain;
+}
+
+.ios-picker-overlay.active .ios-picker-sheet {
+  transform: translate3d(0, 0, 0);
+}
+
+.ios-picker-handle {
+  width: 40px;
+  height: 5px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.28);
+  margin: 2px auto 14px;
+  flex-shrink: 0;
+}
+
+.ios-picker-header {
+  text-align: center;
+  margin-bottom: 16px;
+  flex-shrink: 0;
+}
+
+.ios-picker-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -0.3px;
+  margin-bottom: 4px;
+}
+
+.ios-picker-sub {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.ios-picker-options {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 18px;
+  overflow-y: auto;
+  max-height: 48vh;
+  margin-bottom: 14px;
+  flex: 1 1 auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.ios-picker-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  cursor: pointer;
+  border-bottom: 0.5px solid rgba(255, 255, 255, 0.06);
+  transition: background 0.15s ease, color 0.15s;
+  font-size: 15px;
+  font-weight: 500;
+  color: #ffffff;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ios-picker-item:last-child {
+  border-bottom: none;
+}
+
+.ios-picker-item:active {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.ios-picker-item.selected {
+  color: var(--color-active);
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.ios-picker-check {
+  width: 20px;
+  height: 20px;
+  color: var(--color-active);
+  flex-shrink: 0;
+  filter: drop-shadow(0 0 6px var(--color-active-glow));
+}
+
+.ios-picker-close-btn {
+  width: 100%;
+  padding: 14px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.15s;
+  flex-shrink: 0;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ios-picker-close-btn:active {
+  background: rgba(255, 255, 255, 0.16);
+  transform: scale(0.98);
 }
 
 /* Action Buttons */

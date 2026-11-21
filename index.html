@@ -17,11 +17,11 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
   <!-- Local and Firebase Data Adapters -->
-  <script src="./data-store.js?v=2.2"></script>
-  <script src="./firebase-config.js?v=2.2"></script>
+  <script src="./data-store.js?v=2.3"></script>
+  <script src="./firebase-config.js?v=2.3"></script>
 
   <!-- Styles -->
-  <link rel="stylesheet" href="./style.css?v=2.2">
+  <link rel="stylesheet" href="./style.css?v=2.3">
 </head>
 <body>
 
@@ -852,7 +852,22 @@
     </div>
   </nav>
 
+  <!-- iOS Liquid Glass Action Sheet Picker Modal -->
+  <div id="iosPickerOverlay" class="ios-picker-overlay">
+    <div id="iosPickerSheet" class="ios-picker-sheet">
+      <div class="ios-picker-handle"></div>
+      <div class="ios-picker-header">
+        <div id="iosPickerTitle" class="ios-picker-title">Выберите вариант</div>
+        <div id="iosPickerSub" class="ios-picker-sub">Настройка приложения</div>
+      </div>
+      <div id="iosPickerOptions" class="ios-picker-options">
+        <!-- Dynamic options with checkmarks -->
+      </div>
+      <button id="iosPickerCloseBtn" class="ios-picker-close-btn" type="button">Готово</button>
+    </div>
+  </div>
+
   <!-- App Logic -->
-  <script src="./app.js?v=2.2"></script>
+  <script src="./app.js?v=2.3"></script>
 </body>
 </html>
