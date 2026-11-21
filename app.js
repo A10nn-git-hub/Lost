@@ -470,31 +470,7 @@
       });
     }
 
-    // Firebase Connect Button
-    const btnSaveFirebase = document.getElementById('btnSaveFirebase');
-    if (btnSaveFirebase) {
-      btnSaveFirebase.addEventListener('click', async () => {
-        triggerHaptic('medium');
-        const projectId = document.getElementById('fbProjectId')?.value || '';
-        const apiKey = document.getElementById('fbApiKey')?.value || '';
 
-        if (!projectId || !apiKey) {
-          showToast('Введите Project ID и API Key', '⚠️');
-          return;
-        }
-
-        if (window.firebaseAdapter) {
-          const success = await window.firebaseAdapter.saveConfig(apiKey, projectId);
-          if (success) {
-            showToast('Firebase успешно подключен!', '🔥');
-            const badge = document.getElementById('firebaseStatusBadge');
-            if (badge) badge.textContent = 'Подключено к Firebase';
-          } else {
-            showToast('Конфигурация сохранена', '💾');
-          }
-        }
-      });
-    }
 
     // Sync Now Button
     const btnSyncNow = document.getElementById('btnSyncNow');
