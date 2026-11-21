@@ -46,7 +46,11 @@
       timelineMode: 'full',        // 22
       dataRetention: '30',         // 23
       autoBackup: true,            // 25
-      activeDevice: 'primary'      // 27
+      activeDevice: 'primary',     // 27
+      // Feature 10: Parental Weekly Score & Bedtime Curfew
+      weeklyScore: true,
+      weeklyScoreTime: '20:00',
+      curfewTime: '22:30'
     }
   };
 
@@ -337,6 +341,16 @@
 
     const hapticToggle = document.getElementById('settingHaptic');
     if (hapticToggle) hapticToggle.checked = state.settings.hapticFeedback;
+
+    // Feature 10: Parental Weekly Score & Curfew
+    const weeklyScoreToggle = document.getElementById('settingWeeklyScore');
+    if (weeklyScoreToggle) weeklyScoreToggle.checked = state.settings.weeklyScore !== false;
+
+    const curfewInput = document.getElementById('settingCurfewTime');
+    if (curfewInput) curfewInput.value = state.settings.curfewTime || '22:30';
+
+    const weeklyScoreTimeInput = document.getElementById('settingWeeklyScoreTime');
+    if (weeklyScoreTimeInput) weeklyScoreTimeInput.value = state.settings.weeklyScoreTime || '20:00';
 
     applyVisualSettings();
   }
@@ -1240,6 +1254,37 @@
       });
     }
 
+    // Feature 10: Parental Weekly Score & Curfew
+    const weeklyScoreToggle = document.getElementById('settingWeeklyScore');
+    if (weeklyScoreToggle) {
+      weeklyScoreToggle.addEventListener('change', (e) => {
+        state.settings.weeklyScore = e.target.checked;
+        saveSettings();
+        triggerHaptic('light');
+        updateWeeklyScoreDisplay();
+        showToast(e.target.checked ? 'Дневник режима недели включен' : 'Дневник режима отключен', '⭐');
+      });
+    }
+
+    const curfewInput = document.getElementById('settingCurfewTime');
+    if (curfewInput) {
+      curfewInput.addEventListener('change', (e) => {
+        state.settings.curfewTime = e.target.value;
+        saveSettings();
+        updateWeeklyScoreDisplay();
+        showToast(`Отбой: ${e.target.value}`, '🌙');
+      });
+    }
+
+    const weeklyScoreTimeInput = document.getElementById('settingWeeklyScoreTime');
+    if (weeklyScoreTimeInput) {
+      weeklyScoreTimeInput.addEventListener('change', (e) => {
+        state.settings.weeklyScoreTime = e.target.value;
+        saveSettings();
+        showToast(`Время табеля: ${e.target.value}`, '📊');
+      });
+    }
+
     // Sync Handlers (Header icon & Settings button)
     const handleSync = async () => {
       triggerHaptic('medium');
@@ -1350,7 +1395,19 @@
       // 5. Goals badge
       const rootValGoals = document.getElementById('rootValGoals');
       if (rootValGoals) {
-        rootValGoals.textContent = `${state.settings.dailyTargetHours || 8} ч`;
+        if (state.settings.weeklyScore && state.timelineData?.days) {
+          const sc = computeWeeklyScore(state.timelineData.days, state.settings.curfewTime, state.settings.dailyTargetHours);
+          rootValGoals.textContent = `${state.settings.dailyTargetHours}ч • ${sc.score}★`;
+        } else {
+          rootValGoals.textContent = `${state.settings.dailyTargetHours || 8} ч`;
+        }
+      }
+
+      // Root Score Badge in subGoals
+      const rootScoreBadge = document.getElementById('rootScoreBadge');
+      if (rootScoreBadge && state.timelineData?.days) {
+        const sc = computeWeeklyScore(state.timelineData.days, state.settings.curfewTime, state.settings.dailyTargetHours);
+        rootScoreBadge.textContent = `${sc.score} ★`;
       }
 
       // 6. Filters badge
@@ -1684,6 +1741,286 @@
     };
   }
 
+  // ==========================================================================
+  // Feature 10: Parental Weekly Score & Digital Health Scorecard
+  // ==========================================================================
+  function computeWeeklyScore(daysObj, curfewTime = '22:30', targetHours = 8) {
+    const dates = Object.keys(daysObj || {}).sort().reverse().slice(0, 7);
+    if (dates.length === 0) {
+      return {
+        score: '5.0',
+        stars: '★★★★★',
+        verdict: 'Данные накапливаются',
+        curfewRatioStr: '0/0',
+        avgHoursStr: '0ч 00м',
+        targetRatioStr: '100%',
+        peakDayStr: '—',
+        recommendation: 'Начните работу на компьютере, чтобы сформировать первый недельный табель дисциплины.',
+        days: []
+      };
+    }
+
+    let curfewOkCount = 0;
+    let targetOkCount = 0;
+    let totalActiveSec = 0;
+    let maxActiveSec = 0;
+    let peakDayStr = '—';
+    const dayResults = [];
+
+    const [curfewH, curfewM] = (curfewTime || '22:30').split(':').map(Number);
+    const curfewMinutes = curfewH * 60 + curfewM;
+
+    dates.forEach(dKey => {
+      const day = daysObj[dKey];
+      const actSec = day.activeSeconds || 0;
+      totalActiveSec += actSec;
+      if (actSec > maxActiveSec) {
+        maxActiveSec = actSec;
+        peakDayStr = `${day.displayDate || dKey} (${Math.floor(actSec / 3600)}ч ${Math.round((actSec % 3600) / 60)}м)`;
+      }
+
+      // Check last event against bedtime curfew
+      let curfewOk = true;
+      if (day.lastEvent) {
+        const parts = day.lastEvent.split(':').map(Number);
+        const lastMin = parts[0] * 60 + parts[1];
+        if (lastMin > curfewMinutes || lastMin < 5 * 60) {
+          curfewOk = false;
+        }
+      }
+      if (curfewOk) curfewOkCount++;
+
+      // Check daily target
+      const targetOk = (actSec <= targetHours * 3600);
+      if (targetOk) targetOkCount++;
+
+      const hrs = Math.floor(actSec / 3600);
+      const mins = Math.round((actSec % 3600) / 60);
+
+      dayResults.push({
+        date: dKey,
+        displayDate: day.displayDate || dKey,
+        dayOfWeek: day.dayOfWeek || '',
+        hoursStr: `${hrs}ч ${mins}м`,
+        curfewOk: curfewOk,
+        lastEvent: day.lastEvent || '—'
+      });
+    });
+
+    const totalDays = dates.length;
+    const avgSec = Math.round(totalActiveSec / totalDays);
+    const curfewRatio = curfewOkCount / totalDays;
+    const targetRatio = targetOkCount / totalDays;
+
+    let scoreNum = (curfewRatio * 3.0 + targetRatio * 2.0).toFixed(1);
+    scoreNum = Math.max(1.0, Math.min(5.0, parseFloat(scoreNum)));
+
+    let stars = '★★★★★';
+    let verdict = 'Отличная дисциплина';
+    if (scoreNum < 3.0) {
+      stars = '★★☆☆☆';
+      verdict = 'Нарушение режима';
+    } else if (scoreNum < 4.0) {
+      stars = '★★★☆☆';
+      verdict = 'Требует внимания';
+    } else if (scoreNum < 4.8) {
+      stars = '★★★★☆';
+      verdict = 'Хороший баланс';
+    }
+
+    let rec = `Режим недели проанализирован. Комендантский час (${curfewTime}) соблюден в ${curfewOkCount} из ${totalDays} дней.`;
+    if (curfewOkCount < totalDays) {
+      const lateCount = totalDays - curfewOkCount;
+      rec += ` Зафиксировано ${lateCount} поздних сессий после ${curfewTime}. Рекомендуется уделить внимание отбою ребенка.`;
+    } else {
+      rec += ` Все сессии завершались строго вовремя. Признаков ночной усталости и переутомления не обнаружено.`;
+    }
+
+    const firstDate = dates[dates.length - 1];
+    const lastDate = dates[0];
+    const periodStr = `${daysObj[firstDate]?.displayDate || firstDate} — ${daysObj[lastDate]?.displayDate || lastDate}`;
+
+    return {
+      score: scoreNum.toFixed(1),
+      stars,
+      verdict,
+      periodStr,
+      curfewRatioStr: `${curfewOkCount}/${totalDays}`,
+      avgHoursStr: `${Math.floor(avgSec / 3600)}ч ${Math.round((avgSec % 3600) / 60)}м`,
+      targetRatioStr: `${Math.round(targetRatio * 100)}%`,
+      peakDayStr,
+      recommendation: rec,
+      days: dayResults
+    };
+  }
+
+  function updateWeeklyScoreDisplay() {
+    const isEnabled = state.settings.weeklyScore !== false;
+    const banner = document.getElementById('historyWeeklyScoreBanner');
+    if (banner) {
+      banner.style.display = isEnabled ? 'flex' : 'none';
+    }
+
+    const scoreData = computeWeeklyScore(
+      state.timelineData?.days,
+      state.settings.curfewTime || '22:30',
+      state.settings.dailyTargetHours || 8
+    );
+
+    // Banner in History Tab
+    const bannerStars = document.getElementById('bannerStars');
+    const bannerScoreNum = document.getElementById('bannerScoreNum');
+    const bannerVerdict = document.getElementById('bannerVerdict');
+    const bannerScoreDesc = document.getElementById('bannerScoreDesc');
+    if (bannerStars) bannerStars.textContent = scoreData.stars;
+    if (bannerScoreNum) bannerScoreNum.textContent = scoreData.score;
+    if (bannerVerdict) bannerVerdict.textContent = scoreData.verdict;
+    if (bannerScoreDesc) bannerScoreDesc.textContent = `Комендантский час соблюден ${scoreData.curfewRatioStr} дней`;
+
+    // Root badge in subGoals
+    const rootScoreBadge = document.getElementById('rootScoreBadge');
+    if (rootScoreBadge) rootScoreBadge.textContent = `${scoreData.score} ★`;
+
+    // Modal elements
+    const weeklyPeriod = document.getElementById('weeklyScorePeriod');
+    if (weeklyPeriod) weeklyPeriod.textContent = scoreData.periodStr || 'За последние 7 дней';
+
+    const modalScoreNum = document.getElementById('modalScoreNum');
+    if (modalScoreNum) modalScoreNum.textContent = scoreData.score;
+
+    const modalScoreStars = document.getElementById('modalScoreStars');
+    if (modalScoreStars) modalScoreStars.textContent = scoreData.stars;
+
+    const modalScoreVerdict = document.getElementById('modalScoreVerdict');
+    if (modalScoreVerdict) modalScoreVerdict.textContent = scoreData.verdict;
+
+    const scoreCurfewVal = document.getElementById('scoreCurfewVal');
+    if (scoreCurfewVal) scoreCurfewVal.textContent = scoreData.curfewRatioStr;
+
+    const scoreAvgHoursVal = document.getElementById('scoreAvgHoursVal');
+    if (scoreAvgHoursVal) scoreAvgHoursVal.textContent = scoreData.avgHoursStr;
+
+    const scoreTargetRatioVal = document.getElementById('scoreTargetRatioVal');
+    if (scoreTargetRatioVal) scoreTargetRatioVal.textContent = scoreData.targetRatioStr;
+
+    const scorePeakDayVal = document.getElementById('scorePeakDayVal');
+    if (scorePeakDayVal) scorePeakDayVal.textContent = scoreData.peakDayStr;
+
+    const modalRec = document.getElementById('modalScoreRecommendation');
+    if (modalRec) modalRec.textContent = scoreData.recommendation;
+
+    // Mini Days Breakdown List
+    const daysList = document.getElementById('weeklyDaysList');
+    if (daysList) {
+      daysList.innerHTML = '';
+      scoreData.days.forEach(d => {
+        const row = document.createElement('div');
+        row.className = 'weekly-day-row';
+        row.innerHTML = `
+          <div class="weekly-day-left">
+            <span>${d.displayDate}</span>
+            <span class="weekly-day-hours">${d.hoursStr}</span>
+          </div>
+          <div class="weekly-day-right">
+            <span class="weekly-day-status ${d.curfewOk ? 'ok' : 'warn'}">
+              ${d.curfewOk ? '✅ До ' + (state.settings.curfewTime || '22:30') : '⚠️ Отбой ' + d.lastEvent}
+            </span>
+          </div>
+        `;
+        daysList.appendChild(row);
+      });
+    }
+  }
+
+  async function sendWeeklyScoreToTelegram() {
+    const token = '9264075011:AAEuTIlcMnjzKw8T85NE9lvpSMWJRfbQ_QM';
+    const chatId = tg?.initDataUnsafe?.user?.id ? tg.initDataUnsafe.user.id.toString() : '6278269178';
+    const scoreData = computeWeeklyScore(
+      state.timelineData?.days,
+      state.settings.curfewTime || '22:30',
+      state.settings.dailyTargetHours || 8
+    );
+
+    let daysText = '';
+    scoreData.days.forEach(d => {
+      const statusIcon = d.curfewOk ? '✅ В норме' : '⚠️ Поздний отбой';
+      daysText += `• <b>${d.displayDate}</b>: ${d.hoursStr} (отбой: ${d.lastEvent}) — ${statusIcon}\n`;
+    });
+
+    const msg = `⭐️ <b>ТАБЕЛЬ ДИСЦИПЛИНЫ НЕДЕЛИ</b>\n` +
+      `<i>Родительский отчет цифрового баланса</i>\n\n` +
+      `Период: <b>${scoreData.periodStr}</b>\n\n` +
+      `📊 <b>Общая оценка:</b> ${scoreData.score} / 5.0 (${scoreData.stars})\n` +
+      `Статус: <b>${scoreData.verdict}</b>\n\n` +
+      `🌙 <b>Комендантский час (до ${state.settings.curfewTime || '22:30'}):</b> ${scoreData.curfewRatioStr} дней соблюден\n` +
+      `⏱ <b>Среднее время за ПК:</b> ${scoreData.avgHoursStr} в день\n` +
+      `⚡ <b>Пиковый день:</b> ${scoreData.peakDayStr}\n` +
+      `🎯 <b>Соблюдение дневной нормы:</b> ${scoreData.targetRatioStr}\n\n` +
+      `📅 <b>Хроника по дням:</b>\n${daysText}\n` +
+      `💡 <b>Рекомендация:</b>\n${scoreData.recommendation}\n\n` +
+      `<i>Сформировано Mini App @LaptopTimeBot</i>`;
+
+    try {
+      const resp = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text: msg,
+          parse_mode: 'HTML'
+        })
+      });
+      const res = await resp.json();
+      if (res.ok) {
+        showToast('Табель успешно отправлен в бот! 📤', '⭐️');
+        triggerHaptic('success');
+      } else {
+        showToast('Ошибка отправки в Telegram', '⚠️');
+      }
+    } catch (e) {
+      showToast('Сетевая ошибка при отправке', '⚠️');
+    }
+  }
+
+  function initWeeklyScoreModal() {
+    const overlay = document.getElementById('iosWeeklyScoreOverlay');
+    const closeBtn = document.getElementById('btnCloseWeeklyScore');
+    const openBtnHistory = document.getElementById('btnOpenWeeklyScoreHistory');
+    const openRowSettings = document.getElementById('rowOpenWeeklyScoreCard');
+    const sendBtn = document.getElementById('btnSendScoreToBot');
+
+    if (!overlay) return;
+
+    function openModal() {
+      updateWeeklyScoreDisplay();
+      overlay.classList.add('active');
+      triggerHaptic('light');
+    }
+
+    function closeModal() {
+      overlay.classList.remove('active');
+    }
+
+    if (openBtnHistory) openBtnHistory.addEventListener('click', openModal);
+    if (openRowSettings) openRowSettings.addEventListener('click', openModal);
+    if (closeBtn) closeBtn.addEventListener('click', closeModal);
+
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) closeModal();
+    });
+
+    if (sendBtn) {
+      sendBtn.addEventListener('click', async () => {
+        triggerHaptic('medium');
+        sendBtn.disabled = true;
+        sendBtn.textContent = 'Отправка...';
+        await sendWeeklyScoreToTelegram();
+        sendBtn.disabled = false;
+        sendBtn.textContent = '📤 Отправить табель в Telegram';
+      });
+    }
+  }
+
   // iOS Fluid Rubber Stretch & Physics Engine for All Elements
   function initRubberPhysics() {
     // 1. Global Viewport Overscroll Rubber Pull-to-Stretch
@@ -1914,6 +2251,7 @@
     initSettings();
     initSettingsNavigation();
     initCustomSelectPickers();
+    initWeeklyScoreModal();
     initRubberPhysics();
 
     const data = await loadData();
@@ -1923,6 +2261,7 @@
       state.selectedDateKey = sortedDates[0];
       renderHistoryChips();
     }
+    updateWeeklyScoreDisplay();
   }
 
   if (document.readyState === 'loading') {

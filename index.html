@@ -17,11 +17,11 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
   <!-- Local and Firebase Data Adapters -->
-  <script src="./data-store.js?v=2.5"></script>
-  <script src="./firebase-config.js?v=2.5"></script>
+  <script src="./data-store.js?v=2.6"></script>
+  <script src="./firebase-config.js?v=2.6"></script>
 
   <!-- Styles -->
-  <link rel="stylesheet" href="./style.css?v=2.5">
+  <link rel="stylesheet" href="./style.css?v=2.6">
 </head>
 <body>
 
@@ -162,6 +162,16 @@
       <!-- Days Scroll Selector -->
       <section class="history-days-scroll" id="historyDaysScroll">
         <!-- Day chips injected dynamically -->
+      </section>
+
+      <!-- Weekly Score Banner in History (Parental Digital Health Score) -->
+      <section class="weekly-score-banner glass-card rubber" id="historyWeeklyScoreBanner">
+        <div class="weekly-score-banner-left">
+          <div class="weekly-score-stars-preview" id="bannerStars">★★★★☆</div>
+          <div class="weekly-score-banner-title">Табель недели: <span id="bannerScoreNum">5.0</span> • <span id="bannerVerdict">Отличный режим</span></div>
+          <div class="weekly-score-banner-sub" id="bannerScoreDesc">Комендантский час соблюден 7 из 7 дней</div>
+        </div>
+        <button class="weekly-score-open-btn" id="btnOpenWeeklyScoreHistory" type="button">Табель ›</button>
       </section>
 
       <!-- Selected Day Overview Card -->
@@ -683,6 +693,71 @@
             Цель используется для подсчета процента выполнения плана на главном экране активности.
           </div>
         </section>
+
+        <!-- Parental Control & Weekly Score (Feature 10) -->
+        <section class="settings-group">
+          <div class="settings-group-title">Родительский контроль и режим</div>
+          <div class="settings-card rubber">
+            <!-- Weekly Score Toggle -->
+            <div class="settings-row">
+              <div class="settings-row-left">
+                <div class="ios-icon-badge badge-gold">⭐</div>
+                <div class="settings-row-label">
+                  <span class="settings-label-main">Дневник режима недели</span>
+                  <span class="settings-label-sub">Оценка сна, дисциплины и стабильности</span>
+                </div>
+              </div>
+              <label class="ios-toggle">
+                <input type="checkbox" id="settingWeeklyScore" checked>
+                <span class="ios-slider"></span>
+              </label>
+            </div>
+
+            <!-- Bedtime Curfew Input -->
+            <div class="settings-row">
+              <div class="settings-row-left">
+                <div class="ios-icon-badge badge-indigo">🌙</div>
+                <div class="settings-row-label">
+                  <span class="settings-label-main">Комендантский час (Отбой)</span>
+                  <span class="settings-label-sub">Контроль ночных сессий за компьютером</span>
+                </div>
+              </div>
+              <input type="time" id="settingCurfewTime" class="ios-input" value="22:30">
+            </div>
+
+            <!-- Sunday Digest Time -->
+            <div class="settings-row">
+              <div class="settings-row-left">
+                <div class="ios-icon-badge badge-blue">📊</div>
+                <div class="settings-row-label">
+                  <span class="settings-label-main">Время воскресного табеля</span>
+                  <span class="settings-label-sub">Еженедельный отчет родителям в бот</span>
+                </div>
+              </div>
+              <input type="time" id="settingWeeklyScoreTime" class="ios-input" value="20:00">
+            </div>
+
+            <!-- Open Interactive Scorecard Sheet -->
+            <div class="settings-row" id="rowOpenWeeklyScoreCard" style="cursor: pointer;">
+              <div class="settings-row-left">
+                <div class="ios-icon-badge badge-purple">🏆</div>
+                <div class="settings-row-label">
+                  <span class="settings-label-main">Открыть текущий табель недели</span>
+                  <span class="settings-label-sub">Сводный расчет баллов и рекомендация</span>
+                </div>
+              </div>
+              <div class="settings-row-right">
+                <span class="settings-val-badge" id="rootScoreBadge" style="color: #fbbf24; font-weight: 600;">5.0 ★</span>
+                <svg class="settings-chevron-svg" width="7" height="12" viewBox="0 0 7 12" fill="none">
+                  <path d="M1 1L6 6L1 11" stroke="rgba(255,255,255,0.3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+          <div class="settings-group-footer">
+            Формирует балльную оценку (от 1 до 5 звезд) на основе ночных включений, непрерывных сессий и соблюдения нормы сна.
+          </div>
+        </section>
       </div>
 
       <!-- ================= SUB-PAGE 6: Фильтры данных ================= -->
@@ -867,7 +942,76 @@
     </div>
   </div>
 
+  <!-- iOS Liquid Glass Parental Weekly Score Modal (Feature 10) -->
+  <div id="iosWeeklyScoreOverlay" class="ios-picker-overlay">
+    <div id="iosWeeklyScoreSheet" class="ios-picker-sheet weekly-score-sheet">
+      <div class="ios-picker-handle"></div>
+      
+      <div class="weekly-score-header">
+        <div class="weekly-score-badge-pill">Родительский контроль</div>
+        <h2 class="weekly-score-title">Табель дисциплины недели</h2>
+        <div class="weekly-score-period" id="weeklyScorePeriod">За последние 7 дней</div>
+      </div>
+
+      <!-- Main Score Star Hero -->
+      <div class="weekly-score-hero">
+        <div class="weekly-score-rating-num" id="modalScoreNum">5.0</div>
+        <div class="weekly-score-stars" id="modalScoreStars">★★★★★</div>
+        <div class="weekly-score-verdict" id="modalScoreVerdict">Превосходный режим</div>
+      </div>
+
+      <!-- Metrics Breakdown 2x2 Grid -->
+      <div class="weekly-score-grid">
+        <div class="weekly-metric-box">
+          <div class="weekly-metric-icon">🌙</div>
+          <div class="weekly-metric-val" id="scoreCurfewVal">7/7</div>
+          <div class="weekly-metric-label">Соблюдение отбоя</div>
+        </div>
+        <div class="weekly-metric-box">
+          <div class="weekly-metric-icon">⏱</div>
+          <div class="weekly-metric-val" id="scoreAvgHoursVal">3ч 15м</div>
+          <div class="weekly-metric-label">Среднее в день</div>
+        </div>
+        <div class="weekly-metric-box">
+          <div class="weekly-metric-icon">🎯</div>
+          <div class="weekly-metric-val" id="scoreTargetRatioVal">100%</div>
+          <div class="weekly-metric-label">Дни в норме</div>
+        </div>
+        <div class="weekly-metric-box">
+          <div class="weekly-metric-icon">⚡</div>
+          <div class="weekly-metric-val" id="scorePeakDayVal">—</div>
+          <div class="weekly-metric-label">Пиковый день</div>
+        </div>
+      </div>
+
+      <!-- 7-Day Mini Timeline Breakdown -->
+      <div class="weekly-days-list" id="weeklyDaysList">
+        <!-- Rendered by JS -->
+      </div>
+
+      <!-- AI / Parental Recommendation Card -->
+      <div class="weekly-recommendation-card">
+        <div class="weekly-rec-header">
+          <span>💡</span> <span>Рекомендация родителям</span>
+        </div>
+        <div class="weekly-rec-body" id="modalScoreRecommendation">
+          Анализируем данные об активности за последнюю неделю...
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="weekly-score-actions">
+        <button id="btnSendScoreToBot" class="btn-primary" type="button">
+          📤 Отправить табель в Telegram
+        </button>
+        <button id="btnCloseWeeklyScore" class="ios-picker-close-btn" type="button">
+          Закрыть
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- App Logic -->
-  <script src="./app.js?v=2.5"></script>
+  <script src="./app.js?v=2.6"></script>
 </body>
 </html>
