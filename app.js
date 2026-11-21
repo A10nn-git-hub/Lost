@@ -344,6 +344,7 @@
     try {
       localStorage.setItem('laptop_miniapp_settings', JSON.stringify(state.settings));
     } catch (e) {}
+    window._updateRootSettingsLabels?.();
   }
 
   // Re-render current active screen
@@ -709,6 +710,11 @@
       if (state.currentTab === targetTab) return;
       if (shouldHaptic) triggerHaptic('medium');
       state.currentTab = targetTab;
+
+      // Close settings sub-page without transition when leaving settings tab
+      if (targetTab !== 'settings') {
+        window._closeSettingsSubPage?.(false);
+      }
 
       // Switch active tab view with smooth scroll to top
       document.querySelectorAll('.tab-content').forEach(view => view.classList.remove('active'));
@@ -1301,6 +1307,157 @@
     }
   }
 
+  // iOS Authentic Settings Drill-Down Navigation & Sub-Pages
+  function initSettingsNavigation() {
+    let currentOpenSub = null;
+    const root = document.getElementById('settingsViewRoot');
+    const tabSettings = document.getElementById('tab-settings');
+
+    function updateRootValueLabels() {
+      // 1. Device badge
+      const rootValDevice = document.getElementById('rootValDevice');
+      if (rootValDevice) {
+        if (state.settings.activeDevice === 'desktop') {
+          rootValDevice.textContent = 'ПК';
+        } else {
+          rootValDevice.textContent = 'Ноутбук';
+        }
+      }
+
+      // 2. Notify badge
+      const rootValNotify = document.getElementById('rootValNotify');
+      if (rootValNotify) {
+        rootValNotify.textContent = state.settings.reportTime || '23:59';
+      }
+
+      // 3. Theme badge
+      const rootValTheme = document.getElementById('rootValTheme');
+      if (rootValTheme) {
+        const themeMap = {
+          emerald: 'Изумруд',
+          sapphire: 'Сапфир',
+          amethyst: 'Аметист',
+          sunset: 'Закат',
+          rose: 'Роза'
+        };
+        rootValTheme.textContent = themeMap[state.settings.accentColor] || 'Изумруд';
+      }
+
+      // 4. Interface badge
+      const rootValInterface = document.getElementById('rootValInterface');
+      if (rootValInterface) {
+        rootValInterface.textContent = state.settings.density === 'compact' ? 'Компакт' : 'Комфорт';
+      }
+
+      // 5. Goals badge
+      const rootValGoals = document.getElementById('rootValGoals');
+      if (rootValGoals) {
+        rootValGoals.textContent = `${state.settings.dailyTargetHours || 8} ч`;
+      }
+
+      // 6. Filters badge
+      const rootValFilters = document.getElementById('rootValFilters');
+      if (rootValFilters) {
+        rootValFilters.textContent = state.settings.ignoreMicro ? 'Фильтр <2м' : 'Все сессии';
+      }
+
+      // 7. Storage badge
+      const rootValStorage = document.getElementById('rootValStorage');
+      if (rootValStorage) {
+        const ret = state.settings.dataRetention;
+        rootValStorage.textContent = ret === 'all' ? 'Все дни' : `${ret || 30} дн.`;
+      }
+    }
+
+    function handleTgBack() {
+      closeCurrentSubPage(true);
+    }
+
+    function openSubPage(subId) {
+      const targetSub = document.getElementById(subId);
+      if (!targetSub || !root) return;
+
+      currentOpenSub = targetSub;
+      root.classList.add('slide-left');
+      targetSub.classList.remove('slide-out');
+      targetSub.classList.add('active');
+
+      // Adjust container height to fit active subpage
+      if (tabSettings) {
+        tabSettings.style.minHeight = `${targetSub.scrollHeight + 60}px`;
+      }
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      // Telegram Native Back Button Integration
+      if (tg?.BackButton) {
+        try {
+          tg.BackButton.show();
+          tg.BackButton.onClick(handleTgBack);
+        } catch (e) {}
+      }
+      triggerHaptic('light');
+    }
+
+    function closeCurrentSubPage(animate = true) {
+      if (!currentOpenSub) return;
+      const closingSub = currentOpenSub;
+      currentOpenSub = null;
+
+      if (tabSettings) {
+        tabSettings.style.minHeight = '';
+      }
+
+      if (animate) {
+        closingSub.classList.add('slide-out');
+        setTimeout(() => {
+          closingSub.classList.remove('active', 'slide-out');
+        }, 360);
+      } else {
+        closingSub.classList.remove('active', 'slide-out');
+      }
+
+      if (root) {
+        root.classList.remove('slide-left');
+      }
+
+      if (tg?.BackButton) {
+        try {
+          tg.BackButton.offClick(handleTgBack);
+          tg.BackButton.hide();
+        } catch (e) {}
+      }
+      triggerHaptic('light');
+      updateRootValueLabels();
+    }
+
+    // Expose for external calls (e.g. tab switching, quick jump)
+    window._closeSettingsSubPage = closeCurrentSubPage;
+    window._openSettingsSubPage = openSubPage;
+    window._updateRootSettingsLabels = updateRootValueLabels;
+
+    // Attach click listeners to drill-down rows
+    document.querySelectorAll('[data-open-sub]').forEach(item => {
+      item.addEventListener('click', (e) => {
+        if (e.target.closest('input, select, button:not(.settings-chevron)')) return;
+        const subId = item.getAttribute('data-open-sub');
+        if (subId) {
+          openSubPage(subId);
+        }
+      });
+    });
+
+    // Attach click listeners to back buttons
+    document.querySelectorAll('[data-back]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        closeCurrentSubPage(true);
+      });
+    });
+
+    // Initial label population
+    updateRootValueLabels();
+  }
+
   // iOS Fluid Rubber Stretch & Physics Engine for All Elements
   function initRubberPhysics() {
     // 1. Global Viewport Overscroll Rubber Pull-to-Stretch
@@ -1529,6 +1686,7 @@
     initTabs();
     initTimelineStretch();
     initSettings();
+    initSettingsNavigation();
     initRubberPhysics();
 
     const data = await loadData();

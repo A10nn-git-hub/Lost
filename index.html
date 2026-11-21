@@ -241,361 +241,535 @@
 
     </main>
 
-    <!-- TAB 3: НАСТРОЙКИ (iOS Settings Grouped Style) -->
+    <!-- TAB 3: НАСТРОЙКИ (iOS Settings Navigation Stack) -->
     <main id="tab-settings" class="tab-content">
       
-      <!-- iOS Apple ID / Device Profile Banner -->
-      <section class="ios-profile-card rubber">
-        <div class="ios-profile-avatar">💻</div>
-        <div class="ios-profile-info">
-          <div class="ios-profile-name" id="settingsProfileName">Артемий</div>
-          <div class="ios-profile-sub" id="settingsProfileSub">Мой Ноутбук • Windows 11 • В сети</div>
-        </div>
-        <div class="ios-chevron">›</div>
-      </section>
-
-      <!-- Group 1: Device Management (Multi-PC) -->
-      <section class="settings-group">
-        <div class="settings-group-title">Устройство</div>
-        <div class="settings-card rubber">
-          <div class="settings-row">
-            <div class="settings-row-left">
-              <div class="ios-icon-badge badge-blue">💻</div>
-              <div class="settings-row-label">
-                <span class="settings-label-main">Активное устройство</span>
-                <span class="settings-label-sub">Профиль для сбора статистики</span>
-              </div>
-            </div>
-            <select id="settingActiveDevice" class="ios-select">
-              <option value="primary">💻 Мой Ноутбук (основной)</option>
-              <option value="desktop">🖥 Домашний ПК</option>
-              <option value="add">+ Добавить устройство...</option>
-            </select>
+      <!-- ROOT VIEW: Column of Drill-Down Clickable Setting Items -->
+      <div id="settingsViewRoot" class="settings-nav-view active">
+        
+        <!-- Apple Profile / Device Banner -->
+        <section class="ios-profile-card rubber" data-open-sub="subDevices">
+          <div class="ios-profile-avatar">💻</div>
+          <div class="ios-profile-info">
+            <div class="ios-profile-name" id="settingsProfileName">Артемий</div>
+            <div class="ios-profile-sub" id="settingsProfileSub">Мой Ноутбук • Windows 11 • В сети</div>
           </div>
-        </div>
-        <div class="settings-group-footer">
-          Статистика привязывается к активному компьютеру через Windows Event Log.
-        </div>
-      </section>
+          <div class="ios-chevron">›</div>
+        </section>
 
-      <!-- Group 2: Notifications & Telegram -->
-      <section class="settings-group">
-        <div class="settings-group-title">Уведомления и бот</div>
-        <div class="settings-card rubber">
-          <!-- Report Time -->
-          <div class="settings-row">
-            <div class="settings-row-left">
-              <div class="ios-icon-badge badge-blue">🔔</div>
-              <div class="settings-row-label">
-                <span class="settings-label-main">Время вечернего отчета</span>
-                <span class="settings-label-sub">Ежедневная отправка сводки в чат</span>
-              </div>
-            </div>
-            <input type="time" id="settingReportTime" class="ios-input" value="23:59">
-          </div>
-
-          <!-- Detailed Table -->
-          <div class="settings-row">
-            <div class="settings-row-left">
-              <div class="ios-icon-badge badge-indigo">📋</div>
-              <div class="settings-row-label">
-                <span class="settings-label-main">Подробная таблица</span>
-                <span class="settings-label-sub">Включать поминутную хронологию</span>
-              </div>
-            </div>
-            <label class="ios-toggle">
-              <input type="checkbox" id="settingDetailedTable" checked>
-              <span class="ios-slider"></span>
-            </label>
-          </div>
-
-          <!-- Haptic feedback -->
-          <div class="settings-row">
-            <div class="settings-row-left">
-              <div class="ios-icon-badge badge-gray">📳</div>
-              <div class="settings-row-label">
-                <span class="settings-label-main">Виброотклик (Haptic)</span>
-                <span class="settings-label-sub">Тактильные щелчки при касаниях</span>
-              </div>
-            </div>
-            <label class="ios-toggle">
-              <input type="checkbox" id="settingHaptic" checked>
-              <span class="ios-slider"></span>
-            </label>
-          </div>
-        </div>
-        <div class="settings-group-footer">
-          Отчеты отправляются ботом @LaptopTimeBot в ваш Telegram чат по расписанию Windows Task Scheduler.
-        </div>
-      </section>
-
-      <!-- Group 3: Appearance & Liquid Glass (13, 14, 15, 16, 17) -->
-      <section class="settings-group">
-        <div class="settings-group-title">Экран и Liquid Glass</div>
-        <div class="settings-card rubber">
-          <!-- 13: Accent Theme Color -->
-          <div class="settings-row" style="flex-direction:column; align-items:flex-start; gap:10px;">
-            <div class="settings-row-left">
-              <div class="ios-icon-badge badge-purple">🎨</div>
-              <div class="settings-row-label">
-                <span class="settings-label-main">Цветовая тема оформления</span>
-                <span class="settings-label-sub">Акцентный оттенок подсветки и кнопок</span>
-              </div>
-            </div>
-            <div class="color-picker-row" style="padding-left:42px;">
-              <div class="color-circle active" data-color="emerald" style="background:#10b981; color:#10b981;" title="Изумрудный (Apple)"></div>
-              <div class="color-circle" data-color="sapphire" style="background:#3b82f6; color:#3b82f6;" title="Сапфировый (Синий)"></div>
-              <div class="color-circle" data-color="amethyst" style="background:#a855f7; color:#a855f7;" title="Аметистовый (Фиолетовый)"></div>
-              <div class="color-circle" data-color="sunset" style="background:#f97316; color:#f97316;" title="Закатный (Оранжевый)"></div>
-              <div class="color-circle" data-color="rose" style="background:#ec4899; color:#ec4899;" title="Неоновый Розовый"></div>
-            </div>
-          </div>
-
-          <!-- 14: Glass Blur Intensity -->
-          <div class="settings-row" style="flex-direction:column; align-items:flex-start; gap:8px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+        <!-- Group 1: General & Notifications -->
+        <section class="settings-group">
+          <div class="settings-group-title">Основные</div>
+          <div class="settings-card rubber">
+            <!-- Row 1: Devices -->
+            <div class="settings-nav-row" data-open-sub="subDevices">
               <div class="settings-row-left">
-                <div class="ios-icon-badge badge-cyan">💧</div>
-                <div class="settings-row-label">
-                  <span class="settings-label-main">Размытие стекла (Blur)</span>
-                  <span class="settings-label-sub">Глубина матовой прозрачности</span>
-                </div>
+                <div class="ios-icon-badge badge-blue">💻</div>
+                <span class="settings-label-main">Устройства (Multi-PC)</span>
               </div>
-              <span id="blurValLabel" style="font-size:13px; font-weight:700; color:var(--text-secondary);">24px</span>
-            </div>
-            <div style="width:100%; padding-left:42px; padding-top:2px;">
-              <input type="range" id="settingGlassBlur" min="10" max="40" step="2" value="24" style="width:100%; accent-color:var(--color-active);">
-            </div>
-          </div>
-
-          <!-- 15: Density -->
-          <div class="settings-row">
-            <div class="settings-row-left">
-              <div class="ios-icon-badge badge-teal">📐</div>
-              <div class="settings-row-label">
-                <span class="settings-label-main">Плотность интерфейса</span>
-                <span class="settings-label-sub">Масштаб карточек и списков</span>
+              <div class="settings-row-right">
+                <span class="settings-val-badge" id="rootValDevice">Ноутбук</span>
+                <span class="settings-chevron">›</span>
               </div>
             </div>
-            <select id="settingDensity" class="ios-select">
-              <option value="comfortable">Комфортный</option>
-              <option value="compact">Компактный</option>
-            </select>
-          </div>
 
-          <!-- 16: Spring Physics -->
-          <div class="settings-row">
-            <div class="settings-row-left">
-              <div class="ios-icon-badge badge-pink">🧲</div>
-              <div class="settings-row-label">
-                <span class="settings-label-main">Упругость анимаций (Physics)</span>
-                <span class="settings-label-sub">Характер пружинного отскока</span>
+            <!-- Row 2: Notifications -->
+            <div class="settings-nav-row" data-open-sub="subNotifications">
+              <div class="settings-row-left">
+                <div class="ios-icon-badge badge-indigo">🔔</div>
+                <span class="settings-label-main">Уведомления и бот</span>
+              </div>
+              <div class="settings-row-right">
+                <span class="settings-val-badge" id="rootValNotify">23:59</span>
+                <span class="settings-chevron">›</span>
               </div>
             </div>
-            <select id="settingSpring" class="ios-select">
-              <option value="rubber">Мягкая резина</option>
-              <option value="snappy">iOS Snappy</option>
-              <option value="smooth">Без пружин</option>
-            </select>
           </div>
+        </section>
 
-          <!-- 17: Ambient Glow -->
-          <div class="settings-row">
-            <div class="settings-row-left">
-              <div class="ios-icon-badge badge-yellow">✨</div>
-              <div class="settings-row-label">
-                <span class="settings-label-main">Фоновые сферы свечения</span>
-                <span class="settings-label-sub">Неоновые градиенты за стеклом</span>
+        <!-- Group 2: Display & Interface -->
+        <section class="settings-group">
+          <div class="settings-group-title">Экран и оформление</div>
+          <div class="settings-card rubber">
+            <!-- Row 3: Appearance & Liquid Glass -->
+            <div class="settings-nav-row" data-open-sub="subAppearance">
+              <div class="settings-row-left">
+                <div class="ios-icon-badge badge-purple">🎨</div>
+                <span class="settings-label-main">Экран и темы Liquid Glass</span>
+              </div>
+              <div class="settings-row-right">
+                <span class="settings-val-badge" id="rootValTheme">Изумруд</span>
+                <span class="settings-chevron">›</span>
               </div>
             </div>
-            <label class="ios-toggle">
-              <input type="checkbox" id="settingAmbientGlow" checked>
-              <span class="ios-slider"></span>
-            </label>
-          </div>
-        </div>
-        <div class="settings-group-footer">
-          Визуальные эффекты Liquid Glass рендерятся с аппаратным ускорением GPU.
-        </div>
-      </section>
 
-      <!-- Group 4: Time Tracking & Goals (18, daily target, reminder) -->
-      <section class="settings-group">
-        <div class="settings-group-title">Учет времени и цели</div>
-        <div class="settings-card rubber">
-          <!-- Daily Target -->
-          <div class="settings-row" style="flex-direction:column; align-items:flex-start; gap:8px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+            <!-- Row 4: Interface & Physics -->
+            <div class="settings-nav-row" data-open-sub="subInterface">
+              <div class="settings-row-left">
+                <div class="ios-icon-badge badge-pink">🧲</div>
+                <span class="settings-label-main">Интерфейс и физика анимаций</span>
+              </div>
+              <div class="settings-row-right">
+                <span class="settings-val-badge" id="rootValInterface">Комфорт</span>
+                <span class="settings-chevron">›</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Group 3: Productivity & Filters -->
+        <section class="settings-group">
+          <div class="settings-group-title">Учет и фильтрация</div>
+          <div class="settings-card rubber">
+            <!-- Row 5: Goals & Rest -->
+            <div class="settings-nav-row" data-open-sub="subGoals">
               <div class="settings-row-left">
                 <div class="ios-icon-badge badge-green">🎯</div>
+                <span class="settings-label-main">Цели и напоминания</span>
+              </div>
+              <div class="settings-row-right">
+                <span class="settings-val-badge" id="rootValGoals">8 ч</span>
+                <span class="settings-chevron">›</span>
+              </div>
+            </div>
+
+            <!-- Row 6: Data Filters -->
+            <div class="settings-nav-row" data-open-sub="subFilters">
+              <div class="settings-row-left">
+                <div class="ios-icon-badge badge-teal">🔍</div>
+                <span class="settings-label-main">Фильтры и точность данных</span>
+              </div>
+              <div class="settings-row-right">
+                <span class="settings-val-badge" id="rootValFilters">Активны</span>
+                <span class="settings-chevron">›</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Group 4: Storage & Backups -->
+        <section class="settings-group">
+          <div class="settings-group-title">Данные и архив</div>
+          <div class="settings-card rubber">
+            <!-- Row 7: Storage & Backup -->
+            <div class="settings-nav-row" data-open-sub="subStorage">
+              <div class="settings-row-left">
+                <div class="ios-icon-badge badge-orange">☁️</div>
+                <span class="settings-label-main">Хранилище и бэкапы</span>
+              </div>
+              <div class="settings-row-right">
+                <span class="settings-val-badge" id="rootValStorage">30 дней</span>
+                <span class="settings-chevron">›</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+
+      <!-- ================= SUB-PAGE 1: Устройства ================= -->
+      <div id="subDevices" class="settings-nav-view sub-page">
+        <div class="ios-nav-header">
+          <button class="ios-back-btn" data-back>‹ Настройки</button>
+          <div class="ios-nav-title">Устройства</div>
+          <div style="width:50px;"></div>
+        </div>
+
+        <section class="settings-group">
+          <div class="settings-group-title">Активный профиль</div>
+          <div class="settings-card rubber">
+            <div class="settings-row">
+              <div class="settings-row-left">
+                <div class="ios-icon-badge badge-blue">💻</div>
                 <div class="settings-row-label">
-                  <span class="settings-label-main">Дневная цель активности</span>
-                  <span class="settings-label-sub">Норма работы за компьютером</span>
+                  <span class="settings-label-main">Текущий компьютер</span>
+                  <span class="settings-label-sub">Источник системных логов</span>
                 </div>
               </div>
-              <span id="targetHoursLabel" style="font-weight:700; color:var(--color-active);">8 ч</span>
-            </div>
-            <div style="width:100%; padding-left:42px; padding-top:2px;">
-              <input type="range" id="settingDailyTarget" min="2" max="14" step="1" value="8" style="width:100%; accent-color:var(--color-active);">
+              <select id="settingActiveDevice" class="ios-select">
+                <option value="primary">💻 Мой Ноутбук (основной)</option>
+                <option value="desktop">🖥 Домашний ПК</option>
+                <option value="add">+ Добавить устройство...</option>
+              </select>
             </div>
           </div>
+          <div class="settings-group-footer">
+            Хронология активности привязывается к выбранному компьютеру. Скрипт в фоновом режиме читает журнал Windows System Event Log.
+          </div>
+        </section>
+      </div>
 
-          <!-- Break Reminder -->
-          <div class="settings-row">
-            <div class="settings-row-left">
-              <div class="ios-icon-badge badge-orange">☕</div>
-              <div class="settings-row-label">
-                <span class="settings-label-main">Напоминание об отдыхе</span>
-                <span class="settings-label-sub">Каждые 3 часа непрерывной работы</span>
-              </div>
-            </div>
-            <label class="ios-toggle">
-              <input type="checkbox" id="settingBreakReminder" checked>
-              <span class="ios-slider"></span>
-            </label>
-          </div>
-
-          <!-- 18: Duration Format -->
-          <div class="settings-row">
-            <div class="settings-row-left">
-              <div class="ios-icon-badge badge-teal">⏱</div>
-              <div class="settings-row-label">
-                <span class="settings-label-main">Формат времени</span>
-                <span class="settings-label-sub">Вид таймеров на карточках</span>
-              </div>
-            </div>
-            <select id="settingDurationFormat" class="ios-select">
-              <option value="human">Краткий (6ч 45м)</option>
-              <option value="exact">С секундами (06:45:12)</option>
-            </select>
-          </div>
-        </div>
-        <div class="settings-group-footer">
-          Цель учитывается для заполнения индикатора дневного прогресса на главном экране.
-        </div>
-      </section>
-
-      <!-- Group 5: Data Precision & Filters (19, 20, 21, 22) -->
-      <section class="settings-group">
-        <div class="settings-group-title">Фильтры и точность данных</div>
-        <div class="settings-card rubber">
-          <!-- 19: Ignore Micro Wakeups -->
-          <div class="settings-row">
-            <div class="settings-row-left">
-              <div class="ios-icon-badge badge-purple">🔍</div>
-              <div class="settings-row-label">
-                <span class="settings-label-main">Микро-пробуждения (&lt; 2м)</span>
-                <span class="settings-label-sub">Отсекать системные включения</span>
-              </div>
-            </div>
-            <label class="ios-toggle">
-              <input type="checkbox" id="settingIgnoreMicro" checked>
-              <span class="ios-slider"></span>
-            </label>
-          </div>
-
-          <!-- 20: Smart Session Merging -->
-          <div class="settings-row">
-            <div class="settings-row-left">
-              <div class="ios-icon-badge badge-blue">🔗</div>
-              <div class="settings-row-label">
-                <span class="settings-label-main">Склейка коротких пауз</span>
-                <span class="settings-label-sub">Не дробить сессию при быстром сне</span>
-              </div>
-            </div>
-            <select id="settingSessionMerge" class="ios-select">
-              <option value="0">Выключено</option>
-              <option value="2">До 2 минут</option>
-              <option value="5" selected>До 5 минут</option>
-            </select>
-          </div>
-
-          <!-- 21: Hibernate interpretation -->
-          <div class="settings-row">
-            <div class="settings-row-left">
-              <div class="ios-icon-badge badge-cyan">🧊</div>
-              <div class="settings-row-label">
-                <span class="settings-label-main">Трактовка гибернации</span>
-                <span class="settings-label-sub">Отображение глубокого сна</span>
-              </div>
-            </div>
-            <select id="settingHibernateMode" class="ios-select">
-              <option value="cyan">Отдельный цвет (Cyan)</option>
-              <option value="off">Считать выключением</option>
-            </select>
-          </div>
-
-          <!-- 22: Timeline View Mode -->
-          <div class="settings-row">
-            <div class="settings-row-left">
-              <div class="ios-icon-badge badge-indigo">📊</div>
-              <div class="settings-row-label">
-                <span class="settings-label-main">Режим 24-часовой шкалы</span>
-                <span class="settings-label-sub">Диапазон отображения на полосе</span>
-              </div>
-            </div>
-            <select id="settingTimelineMode" class="ios-select">
-              <option value="full">Полные 24 часа (00-24)</option>
-              <option value="work">Только активные часы</option>
-            </select>
-          </div>
-        </div>
-        <div class="settings-group-footer">
-          Исключает случайные системные шумы, когда Windows кратковременно просыпается для установки обновлений.
-        </div>
-      </section>
-
-      <!-- Group 6: Storage, Backups & Actions (23, 25, sync, export) -->
-      <section class="settings-group">
-        <div class="settings-group-title">Хранилище и резервные копии</div>
-        <div class="settings-card rubber">
-          <!-- 23: Data Retention -->
-          <div class="settings-row">
-            <div class="settings-row-left">
-              <div class="ios-icon-badge badge-red">📅</div>
-              <div class="settings-row-label">
-                <span class="settings-label-main">Срок хранения истории</span>
-                <span class="settings-label-sub">Период локального архива дней</span>
-              </div>
-            </div>
-            <select id="settingDataRetention" class="ios-select">
-              <option value="14">14 дней</option>
-              <option value="30" selected>30 дней</option>
-              <option value="90">90 дней</option>
-              <option value="all">За всё время</option>
-            </select>
-          </div>
-
-          <!-- 25: Auto backup to Telegram -->
-          <div class="settings-row">
-            <div class="settings-row-left">
-              <div class="ios-icon-badge badge-green">☁️</div>
-              <div class="settings-row-label">
-                <span class="settings-label-main">Автобэкап в Telegram</span>
-                <span class="settings-label-sub">Еженедельная копия базы в чат</span>
-              </div>
-            </div>
-            <label class="ios-toggle">
-              <input type="checkbox" id="settingAutoBackup" checked>
-              <span class="ios-slider"></span>
-            </label>
-          </div>
-        </div>
-        <div class="settings-group-footer">
-          Архив хранится локально на устройстве. Вы можете синхронизировать или экспортировать базу в любой момент.
+      <!-- ================= SUB-PAGE 2: Уведомления и бот ================= -->
+      <div id="subNotifications" class="settings-nav-view sub-page">
+        <div class="ios-nav-header">
+          <button class="ios-back-btn" data-back>‹ Настройки</button>
+          <div class="ios-nav-title">Уведомления</div>
+          <div style="width:50px;"></div>
         </div>
 
-        <div style="display:flex; flex-direction:column; gap:10px; margin-top:10px;">
-          <button id="btnSyncNow" class="btn-primary">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
-            Синхронизировать сейчас
-          </button>
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-            <button id="btnExportJson" class="btn-secondary">📥 Скачать JSON</button>
-            <button id="btnExportCsv" class="btn-secondary">📊 Скачать CSV</button>
+        <section class="settings-group">
+          <div class="settings-group-title">Telegram отчеты</div>
+          <div class="settings-card rubber">
+            <div class="settings-row">
+              <div class="settings-row-left">
+                <div class="ios-icon-badge badge-blue">🔔</div>
+                <div class="settings-row-label">
+                  <span class="settings-label-main">Время вечернего отчета</span>
+                  <span class="settings-label-sub">Ежедневная отправка сводки в чат</span>
+                </div>
+              </div>
+              <input type="time" id="settingReportTime" class="ios-input" value="23:59">
+            </div>
+
+            <div class="settings-row">
+              <div class="settings-row-left">
+                <div class="ios-icon-badge badge-indigo">📋</div>
+                <div class="settings-row-label">
+                  <span class="settings-label-main">Подробная таблица</span>
+                  <span class="settings-label-sub">Включать поминутную хронологию</span>
+                </div>
+              </div>
+              <label class="ios-toggle">
+                <input type="checkbox" id="settingDetailedTable" checked>
+                <span class="ios-slider"></span>
+              </label>
+            </div>
           </div>
+          <div class="settings-group-footer">
+            Отчеты приходят в личный чат от бота @LaptopTimeBot по заданию планировщика Windows Task Scheduler.
+          </div>
+        </section>
+
+        <section class="settings-group">
+          <div class="settings-group-title">Тактильный отклик</div>
+          <div class="settings-card rubber">
+            <div class="settings-row">
+              <div class="settings-row-left">
+                <div class="ios-icon-badge badge-gray">📳</div>
+                <div class="settings-row-label">
+                  <span class="settings-label-main">Виброотклик (Haptic Feedback)</span>
+                  <span class="settings-label-sub">Тактильные щелчки при касаниях</span>
+                </div>
+              </div>
+              <label class="ios-toggle">
+                <input type="checkbox" id="settingHaptic" checked>
+                <span class="ios-slider"></span>
+              </label>
+            </div>
+          </div>
+          <div class="settings-group-footer">
+            Использует Telegram WebApp Taptic Engine для обратной связи при переключении вкладок и тумблеров.
+          </div>
+        </section>
+      </div>
+
+      <!-- ================= SUB-PAGE 3: Экран и Liquid Glass ================= -->
+      <div id="subAppearance" class="settings-nav-view sub-page">
+        <div class="ios-nav-header">
+          <button class="ios-back-btn" data-back>‹ Настройки</button>
+          <div class="ios-nav-title">Экран и темы</div>
+          <div style="width:50px;"></div>
         </div>
-      </section>
+
+        <section class="settings-group">
+          <div class="settings-group-title">Цветовая палитра</div>
+          <div class="settings-card rubber">
+            <div class="settings-row" style="flex-direction:column; align-items:flex-start; gap:10px;">
+              <div class="settings-row-left">
+                <div class="ios-icon-badge badge-purple">🎨</div>
+                <div class="settings-row-label">
+                  <span class="settings-label-main">Акцентный цвет темы</span>
+                  <span class="settings-label-sub">Оттенок подсветки, кнопок и шкалы</span>
+                </div>
+              </div>
+              <div class="color-picker-row" style="padding-left:42px;">
+                <div class="color-circle active" data-color="emerald" style="background:#10b981; color:#10b981;" title="Изумрудный (Apple)"></div>
+                <div class="color-circle" data-color="sapphire" style="background:#3b82f6; color:#3b82f6;" title="Сапфировый (Синий)"></div>
+                <div class="color-circle" data-color="amethyst" style="background:#a855f7; color:#a855f7;" title="Аметистовый (Фиолетовый)"></div>
+                <div class="color-circle" data-color="sunset" style="background:#f97316; color:#f97316;" title="Закатный (Оранжевый)"></div>
+                <div class="color-circle" data-color="rose" style="background:#ec4899; color:#ec4899;" title="Неоновый Розовый"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="settings-group">
+          <div class="settings-group-title">Эффекты стекла</div>
+          <div class="settings-card rubber">
+            <div class="settings-row" style="flex-direction:column; align-items:flex-start; gap:8px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+                <div class="settings-row-left">
+                  <div class="ios-icon-badge badge-cyan">💧</div>
+                  <div class="settings-row-label">
+                    <span class="settings-label-main">Размытие стекла (Blur)</span>
+                    <span class="settings-label-sub">Глубина матовой прозрачности</span>
+                  </div>
+                </div>
+                <span id="blurValLabel" style="font-size:13px; font-weight:700; color:var(--text-secondary);">24px</span>
+              </div>
+              <div style="width:100%; padding-left:42px; padding-top:2px;">
+                <input type="range" id="settingGlassBlur" min="10" max="40" step="2" value="24" style="width:100%; accent-color:var(--color-active);">
+              </div>
+            </div>
+
+            <div class="settings-row">
+              <div class="settings-row-left">
+                <div class="ios-icon-badge badge-yellow">✨</div>
+                <div class="settings-row-label">
+                  <span class="settings-label-main">Фоновые сферы свечения</span>
+                  <span class="settings-label-sub">Неоновые градиенты за матовым стеклом</span>
+                </div>
+              </div>
+              <label class="ios-toggle">
+                <input type="checkbox" id="settingAmbientGlow" checked>
+                <span class="ios-slider"></span>
+              </label>
+            </div>
+          </div>
+          <div class="settings-group-footer">
+            Все эффекты размытия и зеркальных бликов рендерятся с аппаратным ускорением GPU.
+          </div>
+        </section>
+      </div>
+
+      <!-- ================= SUB-PAGE 4: Интерфейс и физика ================= -->
+      <div id="subInterface" class="settings-nav-view sub-page">
+        <div class="ios-nav-header">
+          <button class="ios-back-btn" data-back>‹ Настройки</button>
+          <div class="ios-nav-title">Интерфейс</div>
+          <div style="width:50px;"></div>
+        </div>
+
+        <section class="settings-group">
+          <div class="settings-group-title">Отображение и масштаб</div>
+          <div class="settings-card rubber">
+            <div class="settings-row">
+              <div class="settings-row-left">
+                <div class="ios-icon-badge badge-teal">📐</div>
+                <div class="settings-row-label">
+                  <span class="settings-label-main">Плотность интерфейса</span>
+                  <span class="settings-label-sub">Масштаб карточек и отступов</span>
+                </div>
+              </div>
+              <select id="settingDensity" class="ios-select">
+                <option value="comfortable">Комфортный</option>
+                <option value="compact">Компактный</option>
+              </select>
+            </div>
+
+            <div class="settings-row">
+              <div class="settings-row-left">
+                <div class="ios-icon-badge badge-pink">🧲</div>
+                <div class="settings-row-label">
+                  <span class="settings-label-main">Упругость анимаций (Physics)</span>
+                  <span class="settings-label-sub">Характер пружинного отскока</span>
+                </div>
+              </div>
+              <select id="settingSpring" class="ios-select">
+                <option value="rubber">Мягкая резина</option>
+                <option value="snappy">iOS Snappy</option>
+                <option value="smooth">Без пружин</option>
+              </select>
+            </div>
+
+            <div class="settings-row">
+              <div class="settings-row-left">
+                <div class="ios-icon-badge badge-blue">⏱</div>
+                <div class="settings-row-label">
+                  <span class="settings-label-main">Формат времени</span>
+                  <span class="settings-label-sub">Вид таймеров на карточках</span>
+                </div>
+              </div>
+              <select id="settingDurationFormat" class="ios-select">
+                <option value="human">Краткий (6ч 45м)</option>
+                <option value="exact">С секундами (06:45:12)</option>
+              </select>
+            </div>
+          </div>
+          <div class="settings-group-footer">
+            Компактный режим оптимизирует высоту списков для небольших экранов.
+          </div>
+        </section>
+      </div>
+
+      <!-- ================= SUB-PAGE 5: Цели и отдых ================= -->
+      <div id="subGoals" class="settings-nav-view sub-page">
+        <div class="ios-nav-header">
+          <button class="ios-back-btn" data-back>‹ Настройки</button>
+          <div class="ios-nav-title">Цели и отдых</div>
+          <div style="width:50px;"></div>
+        </div>
+
+        <section class="settings-group">
+          <div class="settings-group-title">Продуктивность</div>
+          <div class="settings-card rubber">
+            <div class="settings-row" style="flex-direction:column; align-items:flex-start; gap:8px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+                <div class="settings-row-left">
+                  <div class="ios-icon-badge badge-green">🎯</div>
+                  <div class="settings-row-label">
+                    <span class="settings-label-main">Дневная цель активности</span>
+                    <span class="settings-label-sub">Норма работы за компьютером</span>
+                  </div>
+                </div>
+                <span id="targetHoursLabel" style="font-weight:700; color:var(--color-active);">8 ч</span>
+              </div>
+              <div style="width:100%; padding-left:42px; padding-top:2px;">
+                <input type="range" id="settingDailyTarget" min="2" max="14" step="1" value="8" style="width:100%; accent-color:var(--color-active);">
+              </div>
+            </div>
+
+            <div class="settings-row">
+              <div class="settings-row-left">
+                <div class="ios-icon-badge badge-orange">☕</div>
+                <div class="settings-row-label">
+                  <span class="settings-label-main">Напоминание об отдыхе</span>
+                  <span class="settings-label-sub">Каждые 3 часа непрерывной работы</span>
+                </div>
+              </div>
+              <label class="ios-toggle">
+                <input type="checkbox" id="settingBreakReminder" checked>
+                <span class="ios-slider"></span>
+              </label>
+            </div>
+          </div>
+          <div class="settings-group-footer">
+            Цель используется для подсчета процента выполнения плана на главном экране активности.
+          </div>
+        </section>
+      </div>
+
+      <!-- ================= SUB-PAGE 6: Фильтры данных ================= -->
+      <div id="subFilters" class="settings-nav-view sub-page">
+        <div class="ios-nav-header">
+          <button class="ios-back-btn" data-back>‹ Настройки</button>
+          <div class="ios-nav-title">Фильтры данных</div>
+          <div style="width:50px;"></div>
+        </div>
+
+        <section class="settings-group">
+          <div class="settings-group-title">Интеллектуальный учет</div>
+          <div class="settings-card rubber">
+            <div class="settings-row">
+              <div class="settings-row-left">
+                <div class="ios-icon-badge badge-purple">🔍</div>
+                <div class="settings-row-label">
+                  <span class="settings-label-main">Микро-пробуждения (&lt; 2м)</span>
+                  <span class="settings-label-sub">Отсекать системные включения</span>
+                </div>
+              </div>
+              <label class="ios-toggle">
+                <input type="checkbox" id="settingIgnoreMicro" checked>
+                <span class="ios-slider"></span>
+              </label>
+            </div>
+
+            <div class="settings-row">
+              <div class="settings-row-left">
+                <div class="ios-icon-badge badge-blue">🔗</div>
+                <div class="settings-row-label">
+                  <span class="settings-label-main">Склейка коротких пауз</span>
+                  <span class="settings-label-sub">Не дробить сессию при быстром сне</span>
+                </div>
+              </div>
+              <select id="settingSessionMerge" class="ios-select">
+                <option value="0">Выключено</option>
+                <option value="2">До 2 минут</option>
+                <option value="5" selected>До 5 минут</option>
+              </select>
+            </div>
+
+            <div class="settings-row">
+              <div class="settings-row-left">
+                <div class="ios-icon-badge badge-cyan">🧊</div>
+                <div class="settings-row-label">
+                  <span class="settings-label-main">Трактовка гибернации</span>
+                  <span class="settings-label-sub">Отображение глубокого сна</span>
+                </div>
+              </div>
+              <select id="settingHibernateMode" class="ios-select">
+                <option value="cyan">Отдельный цвет (Cyan)</option>
+                <option value="off">Считать выключением</option>
+              </select>
+            </div>
+
+            <div class="settings-row">
+              <div class="settings-row-left">
+                <div class="ios-icon-badge badge-indigo">📊</div>
+                <div class="settings-row-label">
+                  <span class="settings-label-main">Режим 24-часовой шкалы</span>
+                  <span class="settings-label-sub">Диапазон отображения на полосе</span>
+                </div>
+              </div>
+              <select id="settingTimelineMode" class="ios-select">
+                <option value="full">Полные 24 часа (00-24)</option>
+                <option value="work">Только активные часы</option>
+              </select>
+            </div>
+          </div>
+          <div class="settings-group-footer">
+            Устраняет помехи, когда ноутбук кратковременно просыпается на 1 минуту для выполнения фоновых задач Windows Update.
+          </div>
+        </section>
+      </div>
+
+      <!-- ================= SUB-PAGE 7: Хранилище и бэкапы ================= -->
+      <div id="subStorage" class="settings-nav-view sub-page">
+        <div class="ios-nav-header">
+          <button class="ios-back-btn" data-back>‹ Настройки</button>
+          <div class="ios-nav-title">Хранилище</div>
+          <div style="width:50px;"></div>
+        </div>
+
+        <section class="settings-group">
+          <div class="settings-group-title">Архив и резервные копии</div>
+          <div class="settings-card rubber">
+            <div class="settings-row">
+              <div class="settings-row-left">
+                <div class="ios-icon-badge badge-red">📅</div>
+                <div class="settings-row-label">
+                  <span class="settings-label-main">Срок хранения истории</span>
+                  <span class="settings-label-sub">Период локального архива</span>
+                </div>
+              </div>
+              <select id="settingDataRetention" class="ios-select">
+                <option value="14">14 дней</option>
+                <option value="30" selected>30 дней</option>
+                <option value="90">90 дней</option>
+                <option value="all">За всё время</option>
+              </select>
+            </div>
+
+            <div class="settings-row">
+              <div class="settings-row-left">
+                <div class="ios-icon-badge badge-green">☁️</div>
+                <div class="settings-row-label">
+                  <span class="settings-label-main">Автобэкап в Telegram</span>
+                  <span class="settings-label-sub">Еженедельная копия базы в чат</span>
+                </div>
+              </div>
+              <label class="ios-toggle">
+                <input type="checkbox" id="settingAutoBackup" checked>
+                <span class="ios-slider"></span>
+              </label>
+            </div>
+          </div>
+          <div class="settings-group-footer">
+            История хранится локально на устройстве без передачи третьим лицам.
+          </div>
+
+          <div style="display:flex; flex-direction:column; gap:10px; margin-top:10px;">
+            <button id="btnSyncNow" class="btn-primary">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+              Синхронизировать сейчас
+            </button>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+              <button id="btnExportJson" class="btn-secondary">📥 Скачать JSON</button>
+              <button id="btnExportCsv" class="btn-secondary">📊 Скачать CSV</button>
+            </div>
+          </div>
+        </section>
+      </div>
 
     </main>
 
