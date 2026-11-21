@@ -661,34 +661,246 @@
     }
   }
 
-  // Tab Navigation Handling
+  // Interactive Liquid Glass Tab Bar & Gesture Navigation
   function initTabs() {
-    const dockButtons = document.querySelectorAll('.dock-btn');
-    dockButtons.forEach(btn => {
-      btn.addEventListener('click', () => {
-        const targetTab = btn.getAttribute('data-tab');
-        if (targetTab === state.currentTab) return;
+    const floatingDock = document.getElementById('floatingDock');
+    const pill = document.getElementById('dockGlassPill');
+    const dockButtons = Array.from(document.querySelectorAll('.dock-btn'));
+    if (!floatingDock || !pill || dockButtons.length === 0) return;
 
-        triggerHaptic('medium');
-        state.currentTab = targetTab;
+    let isDragging = false;
+    let startPointerX = 0;
+    let startPointerY = 0;
+    let startPillX = 0;
+    let currentPillX = 0;
+    let activeIndex = 0;
+    let hoveredIndex = 0;
+    let hasMoved = false;
 
-        // Switch button active styles
-        dockButtons.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
+    // Switch Tab Content View
+    function switchTab(targetTab, shouldHaptic = true) {
+      if (state.currentTab === targetTab) return;
+      if (shouldHaptic) triggerHaptic('medium');
+      state.currentTab = targetTab;
 
-        // Switch active tab view
-        document.querySelectorAll('.tab-content').forEach(view => view.classList.remove('active'));
-        const activeView = document.getElementById(`tab-${targetTab}`);
-        if (activeView) activeView.classList.add('active');
+      // Switch active tab view with smooth scroll to top
+      document.querySelectorAll('.tab-content').forEach(view => view.classList.remove('active'));
+      const activeView = document.getElementById(`tab-${targetTab}`);
+      if (activeView) activeView.classList.add('active');
 
-        // Scroll to top
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
 
-        if (targetTab === 'history') {
-          renderHistoryChips();
+      if (targetTab === 'history') {
+        renderHistoryChips();
+      }
+    }
+
+    // Position and Animate the Glass Pill to Target Tab
+    function snapPillToTab(index, animate = true) {
+      if (index < 0 || index >= dockButtons.length) index = 0;
+      activeIndex = index;
+      hoveredIndex = index;
+      const targetBtn = dockButtons[index];
+
+      // Update button active classes
+      dockButtons.forEach((b, i) => b.classList.toggle('active', i === index));
+
+      // Reset edge effects and dock shift
+      floatingDock.classList.remove('edge-left', 'edge-right', 'is-dragging');
+      floatingDock.style.transform = '';
+
+      if (animate) {
+        pill.style.transition = 'transform 0.45s var(--spring-ease), width 0.45s var(--spring-ease), box-shadow 0.3s';
+        floatingDock.style.transition = 'transform 0.45s var(--spring-ease), box-shadow 0.3s';
+      } else {
+        pill.style.transition = 'none';
+        floatingDock.style.transition = 'none';
+      }
+
+      pill.style.width = `${targetBtn.offsetWidth}px`;
+      pill.style.height = `${targetBtn.offsetHeight}px`;
+      pill.style.top = `${targetBtn.offsetTop}px`;
+      pill.style.transform = `translate3d(${targetBtn.offsetLeft}px, 0, 0) scale(1, 1)`;
+    }
+
+    // Drag / Touch Gesture Handling
+    floatingDock.addEventListener('pointerdown', (e) => {
+      if (e.button !== undefined && e.button !== 0) return;
+
+      startPointerX = e.clientX;
+      startPointerY = e.clientY;
+      hasMoved = false;
+      isDragging = true;
+
+      activeIndex = dockButtons.findIndex(b => b.getAttribute('data-tab') === state.currentTab);
+      if (activeIndex < 0) activeIndex = 0;
+      hoveredIndex = activeIndex;
+
+      startPillX = dockButtons[activeIndex].offsetLeft;
+      currentPillX = startPillX;
+
+      try {
+        floatingDock.setPointerCapture(e.pointerId);
+      } catch (err) {}
+
+      // Disable transitions for 1:1 real-time finger tracking
+      pill.style.transition = 'none';
+      floatingDock.style.transition = 'none';
+      floatingDock.classList.add('is-dragging');
+
+      // Tactile compression upon press
+      pill.style.transform = `translate3d(${currentPillX}px, 0, 0) scale(0.96, 0.96)`;
+    });
+
+    floatingDock.addEventListener('pointermove', (e) => {
+      if (!isDragging) return;
+
+      const deltaX = e.clientX - startPointerX;
+      const deltaY = e.clientY - startPointerY;
+
+      if (!hasMoved && (Math.abs(deltaX) > 4 || Math.abs(deltaY) > 4)) {
+        hasMoved = true;
+        triggerHaptic('light');
+      }
+
+      if (!hasMoved) return;
+
+      const minX = dockButtons[0].offsetLeft;
+      const maxX = dockButtons[dockButtons.length - 1].offsetLeft;
+
+      const rawX = startPillX + deltaX;
+      let actualX = rawX;
+      let scaleX = 1;
+      let scaleY = 1;
+
+      // EDGE RUBBER-BANDING & SQUISH PHYSICS
+      if (rawX < minX) {
+        // Dragging past the left edge ("Сегодня")
+        const overshoot = minX - rawX;
+        const damped = Math.min(36, Math.pow(overshoot, 0.8) * 1.5);
+        actualX = minX - damped;
+
+        // Squish horizontally, bulge vertically at boundary collision
+        const squish = Math.min(0.28, (overshoot / 120) * 0.28);
+        scaleX = 1 - squish;
+        scaleY = 1 + squish * 0.7;
+
+        floatingDock.classList.add('edge-left');
+        floatingDock.classList.remove('edge-right');
+        floatingDock.style.transform = `translateX(${-damped * 0.22}px)`;
+      } else if (rawX > maxX) {
+        // Dragging past the right edge ("Настройки")
+        const overshoot = rawX - maxX;
+        const damped = Math.min(36, Math.pow(overshoot, 0.8) * 1.5);
+        actualX = maxX + damped;
+
+        const squish = Math.min(0.28, (overshoot / 120) * 0.28);
+        scaleX = 1 - squish;
+        scaleY = 1 + squish * 0.7;
+
+        floatingDock.classList.add('edge-right');
+        floatingDock.classList.remove('edge-left');
+        floatingDock.style.transform = `translateX(${damped * 0.22}px)`;
+      } else {
+        // Inside normal bar range: clear edge classes and dock lean
+        floatingDock.classList.remove('edge-left', 'edge-right');
+        floatingDock.style.transform = '';
+
+        // Dynamic fluid elongation in motion direction
+        const speed = Math.abs(deltaX);
+        scaleX = 1 + Math.min(0.08, speed * 0.001);
+        scaleY = 1 / scaleX;
+      }
+
+      currentPillX = actualX;
+
+      // Smoothly interpolate width between buttons
+      const clampedX = Math.max(minX, Math.min(maxX, rawX));
+      let interpolatedWidth = dockButtons[0].offsetWidth;
+      for (let i = 0; i < dockButtons.length - 1; i++) {
+        const b1 = dockButtons[i];
+        const b2 = dockButtons[i + 1];
+        if (clampedX >= b1.offsetLeft && clampedX <= b2.offsetLeft) {
+          const t = (clampedX - b1.offsetLeft) / (b2.offsetLeft - b1.offsetLeft);
+          interpolatedWidth = b1.offsetWidth + (b2.offsetWidth - b1.offsetWidth) * t;
+          break;
+        }
+      }
+
+      pill.style.width = `${interpolatedWidth}px`;
+      pill.style.transform = `translate3d(${actualX}px, 0, 0) scale(${scaleX}, ${scaleY})`;
+
+      // Hover / proximity detection for active tab highlight & haptic clicks
+      const pillCenter = actualX + interpolatedWidth / 2;
+      let closestIdx = 0;
+      let minDistance = Infinity;
+
+      dockButtons.forEach((btn, idx) => {
+        const btnCenter = btn.offsetLeft + btn.offsetWidth / 2;
+        const dist = Math.abs(pillCenter - btnCenter);
+        if (dist < minDistance) {
+          minDistance = dist;
+          closestIdx = idx;
         }
       });
+
+      if (closestIdx !== hoveredIndex) {
+        hoveredIndex = closestIdx;
+        triggerHaptic('selection');
+        dockButtons.forEach((b, i) => b.classList.toggle('active', i === hoveredIndex));
+      }
     });
+
+    const endDrag = (e) => {
+      if (!isDragging) return;
+      isDragging = false;
+      floatingDock.classList.remove('is-dragging', 'edge-left', 'edge-right');
+
+      try {
+        floatingDock.releasePointerCapture(e.pointerId);
+      } catch (err) {}
+
+      let targetIndex = hoveredIndex;
+
+      // If it was a quick tap without significant dragging (< 5px)
+      if (!hasMoved) {
+        const tappedBtn = e.target.closest('.dock-btn');
+        if (tappedBtn) {
+          targetIndex = dockButtons.indexOf(tappedBtn);
+          if (targetIndex < 0) targetIndex = activeIndex;
+        }
+      }
+
+      // Magnetic snap with rubber spring animation
+      snapPillToTab(targetIndex, true);
+
+      // Trigger tab switch
+      const targetTab = dockButtons[targetIndex].getAttribute('data-tab');
+      if (targetTab !== state.currentTab) {
+        switchTab(targetTab, true);
+      } else {
+        triggerHaptic('selection');
+      }
+    };
+
+    floatingDock.addEventListener('pointerup', endDrag);
+    floatingDock.addEventListener('pointercancel', endDrag);
+
+    // Initial positioning of the glass pill
+    const currentIdx = dockButtons.findIndex(b => b.getAttribute('data-tab') === state.currentTab);
+    snapPillToTab(currentIdx >= 0 ? currentIdx : 0, false);
+
+    // Re-snap on window resize / orientation change
+    window.addEventListener('resize', () => {
+      const idx = dockButtons.findIndex(b => b.getAttribute('data-tab') === state.currentTab);
+      snapPillToTab(idx >= 0 ? idx : 0, false);
+    });
+
+    // Ensure layout coordinates are accurate after styles/fonts load
+    setTimeout(() => {
+      const idx = dockButtons.findIndex(b => b.getAttribute('data-tab') === state.currentTab);
+      snapPillToTab(idx >= 0 ? idx : 0, false);
+    }, 100);
   }
 
   // 24-Hour Timeline Stretch Interaction
