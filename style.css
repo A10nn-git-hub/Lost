@@ -51,6 +51,8 @@ body {
   overflow-x: hidden;
   position: relative;
   padding-bottom: 110px; /* Space for bottom floating dock */
+  overscroll-behavior-y: none;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Ambient glow blobs behind the frosted glass */
@@ -90,6 +92,8 @@ body {
   max-width: 540px;
   margin: 0 auto;
   padding: 18px 16px 20px;
+  will-change: transform;
+  transform-origin: top center;
 }
 
 /* Header */
@@ -157,7 +161,7 @@ body {
   transform: scale(0.88);
 }
 
-/* Liquid Glass Cards */
+/* Liquid Glass Cards & Tactile Spring Physics */
 .glass-card {
   background: var(--glass-bg);
   backdrop-filter: blur(var(--glass-blur)) saturate(180%);
@@ -167,11 +171,45 @@ body {
   border-radius: var(--radius-lg);
   padding: 20px;
   margin-bottom: 16px;
-  transition: transform 0.3s var(--spring-ease), border-color 0.3s;
+  will-change: transform;
+  transform-origin: center center;
+  transition: transform 0.35s var(--spring-ease), border-color 0.25s, box-shadow 0.25s;
 }
 
-.glass-card.rubber:active {
-  transform: scale(0.985);
+/* iOS Tactile Fluid Rubber Elasticity on Press */
+.rubber,
+.glass-card,
+.overview-card,
+.settings-card {
+  will-change: transform;
+  transform-origin: center center;
+  transition: transform 0.35s var(--spring-ease), border-color 0.25s, box-shadow 0.25s;
+}
+
+.glass-card.rubber:active,
+.overview-card:active,
+.settings-card:active {
+  transform: scale(0.975);
+}
+
+.metric-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+  will-change: transform;
+  transform-origin: center center;
+  transition: transform 0.35s var(--spring-ease);
+}
+
+.metric-card:active {
+  transform: scale(0.94);
 }
 
 /* Overview Main Card */
@@ -363,7 +401,9 @@ body {
   position: relative;
   width: 100%;
   min-width: 100%;
-  transition: width 0.4s var(--spring-ease);
+  will-change: min-width, transform;
+  transform-origin: left center;
+  transition: min-width 0.55s var(--spring-ease), transform 0.45s var(--spring-ease);
 }
 
 .timeline-24h-track.stretched {
@@ -467,12 +507,14 @@ body {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.07);
   border-radius: var(--radius-sm);
-  transition: background 0.2s, transform 0.2s var(--spring-ease);
+  will-change: transform;
+  transform-origin: center center;
+  transition: background 0.2s, transform 0.25s var(--spring-ease);
 }
 
 .session-item:active {
-  transform: scale(0.98);
-  background: rgba(255, 255, 255, 0.06);
+  transform: scale(0.965) translateX(3px);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .session-left {
@@ -525,6 +567,8 @@ body {
   padding-bottom: 14px;
   margin-bottom: 16px;
   scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  will-change: transform;
 }
 
 .history-days-scroll::-webkit-scrollbar {
@@ -541,11 +585,13 @@ body {
   padding: 12px 8px;
   text-align: center;
   cursor: pointer;
+  will-change: transform;
+  transform-origin: center center;
   transition: transform 0.25s var(--spring-ease), border-color 0.25s, background 0.25s;
 }
 
 .day-chip:active {
-  transform: scale(0.92);
+  transform: scale(0.88);
 }
 
 .day-chip.active {

@@ -1292,12 +1292,235 @@
     }
   }
 
+  // iOS Fluid Rubber Stretch & Physics Engine for All Elements
+  function initRubberPhysics() {
+    // 1. Global Viewport Overscroll Rubber Pull-to-Stretch
+    const appContainer = document.querySelector('.app-container');
+    if (appContainer) {
+      let startY = 0;
+      let startX = 0;
+      let isPulling = false;
+      let pullDirection = 0; // 1: pull down at top, -1: pull up at bottom
+
+      window.addEventListener('touchstart', (e) => {
+        if (e.touches.length !== 1) return;
+        startY = e.touches[0].clientY;
+        startX = e.touches[0].clientX;
+        isPulling = false;
+        pullDirection = 0;
+
+        const atTop = window.scrollY <= 1;
+        const atBottom = (window.innerHeight + window.scrollY) >= (document.documentElement.scrollHeight - 3);
+
+        if (atTop) pullDirection = 1;
+        else if (atBottom) pullDirection = -1;
+      }, { passive: true });
+
+      window.addEventListener('touchmove', (e) => {
+        if (e.touches.length !== 1 || pullDirection === 0) return;
+
+        const currentY = e.touches[0].clientY;
+        const currentX = e.touches[0].clientX;
+        const dy = currentY - startY;
+        const dx = currentX - startX;
+
+        // Ignore if horizontal gesture dominates
+        if (Math.abs(dx) > Math.abs(dy) && !isPulling) {
+          pullDirection = 0;
+          return;
+        }
+
+        // Pulling down at top of page (elastic overscroll)
+        if (pullDirection === 1 && dy > 0 && window.scrollY <= 1) {
+          isPulling = true;
+          const dampedY = Math.min(85, Math.pow(dy, 0.76) * 1.85);
+          const scaleFactor = 1 + Math.min(0.04, dampedY * 0.0004);
+
+          appContainer.style.transition = 'none';
+          appContainer.style.transformOrigin = 'top center';
+          appContainer.style.transform = `translate3d(0, ${dampedY}px, 0) scale(${scaleFactor})`;
+
+          if (dampedY > 35 && !appContainer._hasHaptic) {
+            appContainer._hasHaptic = true;
+            triggerHaptic('light');
+          }
+        }
+        // Pulling up at bottom of page
+        else if (pullDirection === -1 && dy < 0) {
+          const atBottom = (window.innerHeight + window.scrollY) >= (document.documentElement.scrollHeight - 3);
+          if (atBottom) {
+            isPulling = true;
+            const overshoot = -dy;
+            const dampedY = Math.min(70, Math.pow(overshoot, 0.76) * 1.85);
+            const scaleFactor = 1 + Math.min(0.035, dampedY * 0.0004);
+
+            appContainer.style.transition = 'none';
+            appContainer.style.transformOrigin = 'bottom center';
+            appContainer.style.transform = `translate3d(0, ${-dampedY}px, 0) scale(${scaleFactor})`;
+
+            if (dampedY > 35 && !appContainer._hasHaptic) {
+              appContainer._hasHaptic = true;
+              triggerHaptic('light');
+            }
+          }
+        }
+      }, { passive: true });
+
+      const endPull = () => {
+        if (!isPulling) return;
+        isPulling = false;
+        pullDirection = 0;
+        appContainer._hasHaptic = false;
+
+        appContainer.style.transition = 'transform 0.45s var(--spring-ease)';
+        appContainer.style.transform = 'translate3d(0, 0, 0) scale(1)';
+        setTimeout(() => {
+          appContainer.style.transition = '';
+        }, 450);
+      };
+
+      window.addEventListener('touchend', endPull, { passive: true });
+      window.addEventListener('touchcancel', endPull, { passive: true });
+    }
+
+    // 2. Card-Level Tactile Deflection & Rubber Stretch on Swipe
+    const cards = document.querySelectorAll('.glass-card, .metric-card');
+    cards.forEach(card => {
+      let startX = 0;
+      let startY = 0;
+      let isSwiping = false;
+
+      card.addEventListener('touchstart', (e) => {
+        if (e.touches.length !== 1) return;
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+        isSwiping = false;
+      }, { passive: true });
+
+      card.addEventListener('touchmove', (e) => {
+        if (e.touches.length !== 1) return;
+        const currentX = e.touches[0].clientX;
+        const currentY = e.touches[0].clientY;
+        const dx = currentX - startX;
+        const dy = currentY - startY;
+
+        if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 12) {
+          isSwiping = true;
+          const dampedX = Math.sign(dx) * Math.min(22, Math.pow(Math.abs(dx), 0.72) * 0.85);
+          const rotation = dampedX * 0.035;
+          const scale = 1 - Math.min(0.02, Math.abs(dampedX) * 0.001);
+
+          card.style.transition = 'none';
+          card.style.transform = `translate3d(${dampedX}px, 0, 0) scale(${scale}) rotate(${rotation}deg)`;
+        }
+      }, { passive: true });
+
+      const endCardSwipe = () => {
+        if (!isSwiping) return;
+        isSwiping = false;
+        card.style.transition = 'transform 0.45s var(--spring-ease)';
+        card.style.transform = '';
+        setTimeout(() => {
+          card.style.transition = '';
+        }, 450);
+      };
+
+      card.addEventListener('touchend', endCardSwipe, { passive: true });
+      card.addEventListener('touchcancel', endCardSwipe, { passive: true });
+    });
+
+    // 3. Horizontal Scroll Rubber Stretch (Day Chips Carousel)
+    const scrollDays = document.getElementById('historyDaysScroll');
+    if (scrollDays) {
+      let startX = 0;
+      let isOverscrolling = false;
+
+      scrollDays.addEventListener('touchstart', (e) => {
+        if (e.touches.length !== 1) return;
+        startX = e.touches[0].clientX;
+        isOverscrolling = false;
+      }, { passive: true });
+
+      scrollDays.addEventListener('touchmove', (e) => {
+        if (e.touches.length !== 1) return;
+        const dx = e.touches[0].clientX - startX;
+        const atLeft = scrollDays.scrollLeft <= 1;
+        const atRight = scrollDays.scrollLeft + scrollDays.clientWidth >= scrollDays.scrollWidth - 2;
+
+        if ((atLeft && dx > 0) || (atRight && dx < 0)) {
+          isOverscrolling = true;
+          const dampedX = Math.sign(dx) * Math.min(42, Math.pow(Math.abs(dx), 0.75) * 1.4);
+          scrollDays.style.transition = 'none';
+          scrollDays.style.transform = `translate3d(${dampedX}px, 0, 0)`;
+        }
+      }, { passive: true });
+
+      const endOverscroll = () => {
+        if (!isOverscrolling) return;
+        isOverscrolling = false;
+        scrollDays.style.transition = 'transform 0.45s var(--spring-ease)';
+        scrollDays.style.transform = '';
+        setTimeout(() => {
+          scrollDays.style.transition = '';
+        }, 450);
+      };
+
+      scrollDays.addEventListener('touchend', endOverscroll, { passive: true });
+      scrollDays.addEventListener('touchcancel', endOverscroll, { passive: true });
+    }
+
+    // 4. Timeline 24h Bar Track Rubber Overscroll
+    ['today', 'history'].forEach(prefix => {
+      const track = document.getElementById(`${prefix}TimelineTrack`);
+      const container = track?.parentElement;
+      if (!track || !container) return;
+
+      let startX = 0;
+      let isOver = false;
+
+      container.addEventListener('touchstart', (e) => {
+        if (e.touches.length !== 1) return;
+        startX = e.touches[0].clientX;
+        isOver = false;
+      }, { passive: true });
+
+      container.addEventListener('touchmove', (e) => {
+        if (e.touches.length !== 1) return;
+        const dx = e.touches[0].clientX - startX;
+        const atLeft = container.scrollLeft <= 1;
+        const atRight = container.scrollLeft + container.clientWidth >= container.scrollWidth - 2;
+
+        if ((atLeft && dx > 0) || (atRight && dx < 0)) {
+          isOver = true;
+          const dampedX = Math.sign(dx) * Math.min(36, Math.pow(Math.abs(dx), 0.75) * 1.25);
+          const scaleX = 1 + Math.min(0.04, Math.abs(dampedX) * 0.001);
+          track.style.transition = 'none';
+          track.style.transform = `translate3d(${dampedX}px, 0, 0) scaleX(${scaleX})`;
+        }
+      }, { passive: true });
+
+      const endTrackOver = () => {
+        if (!isOver) return;
+        isOver = false;
+        track.style.transition = 'transform 0.45s var(--spring-ease)';
+        track.style.transform = '';
+        setTimeout(() => {
+          track.style.transition = '';
+        }, 450);
+      };
+
+      container.addEventListener('touchend', endTrackOver, { passive: true });
+      container.addEventListener('touchcancel', endTrackOver, { passive: true });
+    });
+  }
+
   // Application Initialization
   async function init() {
     loadSettings();
     initTabs();
     initTimelineStretch();
     initSettings();
+    initRubberPhysics();
 
     const data = await loadData();
     const sortedDates = Object.keys(data.days || {}).sort().reverse();
