@@ -622,8 +622,64 @@ body {
 }
 
 /* ==========================================================================
-   Tab 3: Settings View (iOS Grouped Style)
+   Tab 3: Settings View (Authentic iOS Grouped Style)
    ========================================================================== */
+
+/* iOS Apple Profile Banner Card */
+.ios-profile-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  padding: 16px 18px;
+  margin-bottom: 22px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.15);
+  cursor: pointer;
+}
+
+.ios-profile-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--color-active) 0%, #3b82f6 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  box-shadow: 0 4px 14px var(--color-active-glow);
+  flex-shrink: 0;
+}
+
+.ios-profile-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ios-profile-name {
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.4px;
+  color: #fff;
+}
+
+.ios-profile-sub {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.ios-chevron {
+  font-size: 22px;
+  color: var(--text-muted);
+  font-weight: 300;
+  line-height: 1;
+}
+
 .settings-group {
   margin-bottom: 22px;
 }
@@ -634,32 +690,85 @@ body {
   text-transform: uppercase;
   color: var(--text-muted);
   letter-spacing: 0.6px;
-  padding-left: 12px;
+  padding-left: 14px;
   margin-bottom: 8px;
 }
 
 .settings-card {
   background: var(--glass-bg);
-  backdrop-filter: blur(var(--glass-blur));
-  -webkit-backdrop-filter: blur(var(--glass-blur));
+  backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
   overflow: hidden;
-  box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.2), inset 0 1px 1px rgba(255, 255, 255, 0.12);
+}
+
+.settings-group-footer {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.45;
+  padding: 8px 14px 0;
+  margin-bottom: 24px;
 }
 
 .settings-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 15px 18px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 13px 16px;
+  position: relative;
   transition: background 0.15s;
 }
 
-.settings-row:last-child {
-  border-bottom: none;
+/* iOS Indented Divider (starts after squircle icon) */
+.settings-row:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 58px;
+  right: 0;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.07);
 }
+
+.settings-row:last-child::after {
+  display: none;
+}
+
+.settings-row-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+/* iOS Squircle Icon Badges */
+.ios-icon-badge {
+  width: 30px;
+  height: 30px;
+  min-width: 30px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  flex-shrink: 0;
+}
+
+.badge-blue { background: linear-gradient(135deg, #007aff, #0051a8); }
+.badge-green { background: linear-gradient(135deg, #34c759, #28a745); }
+.badge-orange { background: linear-gradient(135deg, #ff9500, #d97706); }
+.badge-purple { background: linear-gradient(135deg, #af52de, #7c3aed); }
+.badge-pink { background: linear-gradient(135deg, #ff2d55, #db2777); }
+.badge-cyan { background: linear-gradient(135deg, #30b0c7, #0891b2); }
+.badge-indigo { background: linear-gradient(135deg, #5856d6, #4338ca); }
+.badge-yellow { background: linear-gradient(135deg, #ffcc00, #d97706); }
+.badge-gray { background: linear-gradient(135deg, #8e8e93, #636366); }
+.badge-teal { background: linear-gradient(135deg, #2dd4bf, #0d9488); }
+.badge-red { background: linear-gradient(135deg, #ef4444, #b91c1c); }
 
 .settings-row-label {
   display: flex;

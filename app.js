@@ -216,15 +216,24 @@
     const deviceTitle = document.getElementById('deviceTitle');
     const deviceBadge = document.getElementById('deviceSelectorBtn');
     const deviceSelect = document.getElementById('settingActiveDevice');
+    const profileName = document.getElementById('settingsProfileName');
+    const profileSub = document.getElementById('settingsProfileSub');
 
+    const tgUser = tg?.initDataUnsafe?.user?.first_name || 'Артемий';
+    if (profileName) profileName.textContent = tgUser;
+
+    let devName = 'Мой Ноутбук';
     if (deviceKey === 'desktop') {
-      if (deviceTitle) deviceTitle.textContent = 'Домашний ПК';
+      devName = 'Домашний ПК';
+      if (deviceTitle) deviceTitle.textContent = devName;
       if (deviceBadge) deviceBadge.textContent = '🖥 ПК ▼';
     } else {
-      const defaultName = state.timelineData?.device || 'Мой Ноутбук';
-      if (deviceTitle) deviceTitle.textContent = defaultName;
+      devName = state.timelineData?.device || 'Мой Ноутбук';
+      if (deviceTitle) deviceTitle.textContent = devName;
       if (deviceBadge) deviceBadge.textContent = '💻 Ноутбук ▼';
     }
+
+    if (profileSub) profileSub.textContent = `${devName} • Windows 11 • В сети`;
     if (deviceSelect) deviceSelect.value = deviceKey;
   }
 
