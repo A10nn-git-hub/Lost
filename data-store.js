@@ -1,406 +1,388 @@
 ﻿window.LOCAL_TIMELINE_DATA = {
-  "device": "WOMI-PC",
+  "updatedAt": "2026-11-28T08:58:26+03:00",
   "days": {
     "2026-11-20": {
       "sleepSeconds": 0,
-      "firstOn": "19:51:03",
-      "sessions": [
-        {
-          "endMinute": 1191,
-          "start": "00:00:00",
-          "state": "выключен",
-          "startMinute": 0,
-          "duration": "19:51:03",
-          "end": "19:51:03",
-          "durationSeconds": 71463
-        },
-        {
-          "endMinute": 1202,
-          "start": "19:51:03",
-          "state": "включен",
-          "startMinute": 1191,
-          "duration": "00:10:47",
-          "end": "20:01:50",
-          "durationSeconds": 647
-        },
-        {
-          "endMinute": 1440,
-          "start": "20:01:50",
-          "state": "выключен",
-          "startMinute": 1202,
-          "duration": "03:58:10",
-          "end": "24:00:00",
-          "durationSeconds": 14290
-        }
-      ],
-      "lastEvent": "20:01:50",
-      "dayOfWeek": "пт",
       "hibernateSeconds": 0,
       "activeSeconds": 647,
       "displayDate": "20.11.2026",
       "offSeconds": 85753,
+      "lastEvent": "20:01:50",
+      "date": "2026-11-20",
+      "firstOn": "19:51:03",
       "currentState": "выключен",
-      "date": "2026-11-20"
+      "dayOfWeek": "пт",
+      "sessions": [
+        {
+          "state": "выключен",
+          "duration": "19:51:03",
+          "start": "00:00:00",
+          "startMinute": 0,
+          "durationSeconds": 71463,
+          "end": "19:51:03",
+          "endMinute": 1191
+        },
+        {
+          "state": "включен",
+          "duration": "00:10:47",
+          "start": "19:51:03",
+          "startMinute": 1191,
+          "durationSeconds": 647,
+          "end": "20:01:50",
+          "endMinute": 1202
+        },
+        {
+          "state": "выключен",
+          "duration": "03:58:10",
+          "start": "20:01:50",
+          "startMinute": 1202,
+          "durationSeconds": 14290,
+          "end": "24:00:00",
+          "endMinute": 1440
+        }
+      ]
     },
     "2026-11-15": {
       "sleepSeconds": 0,
-      "firstOn": "13:23:27",
-      "sessions": [
-        {
-          "endMinute": 803,
-          "start": "00:00:00",
-          "state": "выключен",
-          "startMinute": 0,
-          "duration": "13:23:27",
-          "end": "13:23:27",
-          "durationSeconds": 48207
-        },
-        {
-          "endMinute": 895,
-          "start": "13:23:27",
-          "state": "включен",
-          "startMinute": 803,
-          "duration": "01:31:26",
-          "end": "14:54:53",
-          "durationSeconds": 5486
-        },
-        {
-          "endMinute": 901,
-          "start": "14:54:53",
-          "state": "выключен",
-          "startMinute": 895,
-          "duration": "00:06:10",
-          "end": "15:01:03",
-          "durationSeconds": 370
-        },
-        {
-          "endMinute": 1035,
-          "start": "15:01:03",
-          "state": "включен",
-          "startMinute": 901,
-          "duration": "02:13:56",
-          "end": "17:14:59",
-          "durationSeconds": 8036
-        },
-        {
-          "endMinute": 1053,
-          "start": "17:14:59",
-          "state": "гибернация",
-          "startMinute": 1035,
-          "duration": "00:18:02",
-          "end": "17:33:01",
-          "durationSeconds": 1082
-        },
-        {
-          "endMinute": 1179,
-          "start": "17:33:01",
-          "state": "включен",
-          "startMinute": 1053,
-          "duration": "02:06:22",
-          "end": "19:39:23",
-          "durationSeconds": 7582
-        },
-        {
-          "endMinute": 1379,
-          "start": "19:39:23",
-          "state": "выключен",
-          "startMinute": 1179,
-          "duration": "03:19:41",
-          "end": "22:59:04",
-          "durationSeconds": 11981
-        },
-        {
-          "endMinute": 1380,
-          "start": "22:59:04",
-          "state": "включен",
-          "startMinute": 1379,
-          "duration": "00:01:25",
-          "end": "23:00:29",
-          "durationSeconds": 85
-        },
-        {
-          "endMinute": 1440,
-          "start": "23:00:29",
-          "state": "выключен",
-          "startMinute": 1380,
-          "duration": "00:59:31",
-          "end": "24:00:00",
-          "durationSeconds": 3571
-        }
-      ],
-      "lastEvent": "23:00:29",
-      "dayOfWeek": "вс",
       "hibernateSeconds": 1082,
       "activeSeconds": 21189,
       "displayDate": "15.11.2026",
       "offSeconds": 64129,
+      "lastEvent": "23:00:29",
+      "date": "2026-11-15",
+      "firstOn": "13:23:27",
       "currentState": "выключен",
-      "date": "2026-11-15"
-    },
-    "2026-11-14": {
-      "sleepSeconds": 0,
-      "firstOn": "13:41:20",
+      "dayOfWeek": "вс",
       "sessions": [
         {
-          "endMinute": 821,
+          "state": "выключен",
+          "duration": "13:23:27",
           "start": "00:00:00",
-          "state": "выключен",
           "startMinute": 0,
-          "duration": "13:41:20",
-          "end": "13:41:20",
-          "durationSeconds": 49280
+          "durationSeconds": 48207,
+          "end": "13:23:27",
+          "endMinute": 803
         },
         {
-          "endMinute": 1225,
-          "start": "13:41:20",
           "state": "включен",
-          "startMinute": 821,
-          "duration": "06:43:11",
-          "end": "20:24:31",
-          "durationSeconds": 24191
+          "duration": "01:31:26",
+          "start": "13:23:27",
+          "startMinute": 803,
+          "durationSeconds": 5486,
+          "end": "14:54:53",
+          "endMinute": 895
         },
         {
-          "endMinute": 1237,
-          "start": "20:24:31",
           "state": "выключен",
-          "startMinute": 1225,
-          "duration": "00:12:35",
-          "end": "20:37:06",
-          "durationSeconds": 755
+          "duration": "00:06:10",
+          "start": "14:54:53",
+          "startMinute": 895,
+          "durationSeconds": 370,
+          "end": "15:01:03",
+          "endMinute": 901
         },
         {
-          "endMinute": 1317,
-          "start": "20:37:06",
           "state": "включен",
-          "startMinute": 1237,
-          "duration": "01:20:00",
-          "end": "21:57:06",
-          "durationSeconds": 4800
+          "duration": "02:13:56",
+          "start": "15:01:03",
+          "startMinute": 901,
+          "durationSeconds": 8036,
+          "end": "17:14:59",
+          "endMinute": 1035
         },
         {
-          "endMinute": 1440,
-          "start": "21:57:06",
+          "state": "гибернация",
+          "duration": "00:18:02",
+          "start": "17:14:59",
+          "startMinute": 1035,
+          "durationSeconds": 1082,
+          "end": "17:33:01",
+          "endMinute": 1053
+        },
+        {
+          "state": "включен",
+          "duration": "02:06:22",
+          "start": "17:33:01",
+          "startMinute": 1053,
+          "durationSeconds": 7582,
+          "end": "19:39:23",
+          "endMinute": 1179
+        },
+        {
           "state": "выключен",
-          "startMinute": 1317,
-          "duration": "02:02:54",
+          "duration": "03:19:41",
+          "start": "19:39:23",
+          "startMinute": 1179,
+          "durationSeconds": 11981,
+          "end": "22:59:04",
+          "endMinute": 1379
+        },
+        {
+          "state": "включен",
+          "duration": "00:01:25",
+          "start": "22:59:04",
+          "startMinute": 1379,
+          "durationSeconds": 85,
+          "end": "23:00:29",
+          "endMinute": 1380
+        },
+        {
+          "state": "выключен",
+          "duration": "00:59:31",
+          "start": "23:00:29",
+          "startMinute": 1380,
+          "durationSeconds": 3571,
           "end": "24:00:00",
-          "durationSeconds": 7374
+          "endMinute": 1440
         }
-      ],
-      "lastEvent": "21:57:06",
-      "dayOfWeek": "сб",
+      ]
+    },
+    "2026-11-27": {
+      "sleepSeconds": 0,
       "hibernateSeconds": 0,
-      "activeSeconds": 28991,
-      "displayDate": "14.11.2026",
-      "offSeconds": 57409,
-      "currentState": "выключен",
-      "date": "2026-11-14"
+      "activeSeconds": 29182,
+      "displayDate": "27.11.2026",
+      "offSeconds": 57218,
+      "lastEvent": "00:00:00",
+      "date": "2026-11-27",
+      "firstOn": "15:53:38",
+      "currentState": "включен",
+      "dayOfWeek": "пт",
+      "sessions": [
+        {
+          "state": "выключен",
+          "duration": "15:53:38",
+          "start": "00:00:00",
+          "startMinute": 0,
+          "durationSeconds": 57218,
+          "end": "15:53:38",
+          "endMinute": 954
+        },
+        {
+          "state": "включен",
+          "duration": "08:06:22",
+          "start": "15:53:38",
+          "startMinute": 954,
+          "durationSeconds": 29182,
+          "end": "24:00:00",
+          "endMinute": 1440
+        }
+      ]
     },
     "2026-11-22": {
       "sleepSeconds": 0,
-      "firstOn": "17:00:43",
-      "sessions": [
-        {
-          "endMinute": 1021,
-          "start": "00:00:00",
-          "state": "гибернация",
-          "startMinute": 0,
-          "duration": "17:00:43",
-          "end": "17:00:43",
-          "durationSeconds": 61243
-        },
-        {
-          "endMinute": 1054,
-          "start": "17:00:43",
-          "state": "включен",
-          "startMinute": 1021,
-          "duration": "00:32:57",
-          "end": "17:33:40",
-          "durationSeconds": 1977
-        },
-        {
-          "endMinute": 1145,
-          "start": "17:33:40",
-          "state": "гибернация",
-          "startMinute": 1054,
-          "duration": "01:30:51",
-          "end": "19:04:31",
-          "durationSeconds": 5451
-        },
-        {
-          "endMinute": 1312,
-          "start": "19:04:31",
-          "state": "включен",
-          "startMinute": 1145,
-          "duration": "02:47:34",
-          "end": "21:52:05",
-          "durationSeconds": 10054
-        },
-        {
-          "endMinute": 1312,
-          "start": "21:52:05",
-          "state": "выключен",
-          "startMinute": 1312,
-          "duration": "00:00:15",
-          "end": "21:52:20",
-          "durationSeconds": 15
-        },
-        {
-          "endMinute": 1331,
-          "start": "21:52:20",
-          "state": "включен",
-          "startMinute": 1312,
-          "duration": "00:19:06",
-          "end": "22:11:26",
-          "durationSeconds": 1146
-        },
-        {
-          "endMinute": 1440,
-          "start": "22:11:26",
-          "state": "выключен",
-          "startMinute": 1331,
-          "duration": "01:48:34",
-          "end": "24:00:00",
-          "durationSeconds": 6514
-        }
-      ],
-      "lastEvent": "22:11:26",
-      "dayOfWeek": "вс",
       "hibernateSeconds": 66694,
       "activeSeconds": 13177,
       "displayDate": "22.11.2026",
       "offSeconds": 6529,
+      "lastEvent": "22:11:26",
+      "date": "2026-11-22",
+      "firstOn": "17:00:43",
       "currentState": "выключен",
-      "date": "2026-11-22"
-    },
-    "2026-11-27": {
-      "sleepSeconds": 0,
-      "firstOn": "15:53:38",
+      "dayOfWeek": "вс",
       "sessions": [
         {
-          "endMinute": 954,
+          "state": "гибернация",
+          "duration": "17:00:43",
           "start": "00:00:00",
-          "state": "выключен",
           "startMinute": 0,
-          "duration": "15:53:38",
-          "end": "15:53:38",
-          "durationSeconds": 57218
+          "durationSeconds": 61243,
+          "end": "17:00:43",
+          "endMinute": 1021
         },
         {
-          "endMinute": 954,
-          "start": "15:53:38",
           "state": "включен",
-          "startMinute": 954,
-          "duration": "00:00:25",
-          "end": "15:54:03",
-          "durationSeconds": 26
+          "duration": "00:32:57",
+          "start": "17:00:43",
+          "startMinute": 1021,
+          "durationSeconds": 1977,
+          "end": "17:33:40",
+          "endMinute": 1054
+        },
+        {
+          "state": "гибернация",
+          "duration": "01:30:51",
+          "start": "17:33:40",
+          "startMinute": 1054,
+          "durationSeconds": 5451,
+          "end": "19:04:31",
+          "endMinute": 1145
+        },
+        {
+          "state": "включен",
+          "duration": "02:47:34",
+          "start": "19:04:31",
+          "startMinute": 1145,
+          "durationSeconds": 10054,
+          "end": "21:52:05",
+          "endMinute": 1312
+        },
+        {
+          "state": "выключен",
+          "duration": "00:00:15",
+          "start": "21:52:05",
+          "startMinute": 1312,
+          "durationSeconds": 15,
+          "end": "21:52:20",
+          "endMinute": 1312
+        },
+        {
+          "state": "включен",
+          "duration": "00:19:06",
+          "start": "21:52:20",
+          "startMinute": 1312,
+          "durationSeconds": 1146,
+          "end": "22:11:26",
+          "endMinute": 1331
+        },
+        {
+          "state": "выключен",
+          "duration": "01:48:34",
+          "start": "22:11:26",
+          "startMinute": 1331,
+          "durationSeconds": 6514,
+          "end": "24:00:00",
+          "endMinute": 1440
         }
-      ],
-      "lastEvent": "15:54:03",
-      "dayOfWeek": "пт",
+      ]
+    },
+    "2026-11-28": {
+      "sleepSeconds": 0,
       "hibernateSeconds": 0,
-      "activeSeconds": 26,
-      "displayDate": "27.11.2026",
-      "offSeconds": 57218,
+      "activeSeconds": 901,
+      "displayDate": "28.11.2026",
+      "offSeconds": 31406,
+      "lastEvent": "08:58:26",
+      "date": "2026-11-28",
+      "firstOn": "00:00:00",
       "currentState": "включен",
-      "date": "2026-11-27"
+      "dayOfWeek": "сб",
+      "sessions": [
+        {
+          "state": "включен",
+          "duration": "00:14:32",
+          "start": "00:00:00",
+          "startMinute": 0,
+          "durationSeconds": 872,
+          "end": "00:14:32",
+          "endMinute": 15
+        },
+        {
+          "state": "выключен",
+          "duration": "08:43:26",
+          "start": "00:14:32",
+          "startMinute": 15,
+          "durationSeconds": 31406,
+          "end": "08:57:58",
+          "endMinute": 538
+        },
+        {
+          "state": "включен",
+          "duration": "00:00:28",
+          "start": "08:57:58",
+          "startMinute": 538,
+          "durationSeconds": 29,
+          "end": "08:58:26",
+          "endMinute": 538
+        }
+      ]
     },
     "2026-11-21": {
       "sleepSeconds": 0,
-      "firstOn": "14:03:35",
-      "sessions": [
-        {
-          "endMinute": 844,
-          "start": "00:00:00",
-          "state": "выключен",
-          "startMinute": 0,
-          "duration": "14:03:35",
-          "end": "14:03:35",
-          "durationSeconds": 50615
-        },
-        {
-          "endMinute": 1152,
-          "start": "14:03:35",
-          "state": "включен",
-          "startMinute": 844,
-          "duration": "05:08:42",
-          "end": "19:12:17",
-          "durationSeconds": 18522
-        },
-        {
-          "endMinute": 1158,
-          "start": "19:12:17",
-          "state": "выключен",
-          "startMinute": 1152,
-          "duration": "00:05:57",
-          "end": "19:18:14",
-          "durationSeconds": 357
-        },
-        {
-          "endMinute": 1167,
-          "start": "19:18:14",
-          "state": "включен",
-          "startMinute": 1158,
-          "duration": "00:09:12",
-          "end": "19:27:26",
-          "durationSeconds": 552
-        },
-        {
-          "endMinute": 1299,
-          "start": "19:27:26",
-          "state": "выключен",
-          "startMinute": 1167,
-          "duration": "02:11:16",
-          "end": "21:38:42",
-          "durationSeconds": 7876
-        },
-        {
-          "endMinute": 1304,
-          "start": "21:38:42",
-          "state": "включен",
-          "startMinute": 1299,
-          "duration": "00:05:40",
-          "end": "21:44:22",
-          "durationSeconds": 340
-        },
-        {
-          "endMinute": 1337,
-          "start": "21:44:22",
-          "state": "выключен",
-          "startMinute": 1304,
-          "duration": "00:32:23",
-          "end": "22:16:45",
-          "durationSeconds": 1943
-        },
-        {
-          "endMinute": 1356,
-          "start": "22:16:45",
-          "state": "включен",
-          "startMinute": 1337,
-          "duration": "00:19:19",
-          "end": "22:36:04",
-          "durationSeconds": 1159
-        },
-        {
-          "endMinute": 1440,
-          "start": "22:36:04",
-          "state": "гибернация",
-          "startMinute": 1356,
-          "duration": "01:23:56",
-          "end": "24:00:00",
-          "durationSeconds": 5036
-        }
-      ],
-      "lastEvent": "22:36:04",
-      "dayOfWeek": "сб",
       "hibernateSeconds": 5036,
       "activeSeconds": 20573,
       "displayDate": "21.11.2026",
       "offSeconds": 60791,
+      "lastEvent": "22:36:04",
+      "date": "2026-11-21",
+      "firstOn": "14:03:35",
       "currentState": "гибернация",
-      "date": "2026-11-21"
+      "dayOfWeek": "сб",
+      "sessions": [
+        {
+          "state": "выключен",
+          "duration": "14:03:35",
+          "start": "00:00:00",
+          "startMinute": 0,
+          "durationSeconds": 50615,
+          "end": "14:03:35",
+          "endMinute": 844
+        },
+        {
+          "state": "включен",
+          "duration": "05:08:42",
+          "start": "14:03:35",
+          "startMinute": 844,
+          "durationSeconds": 18522,
+          "end": "19:12:17",
+          "endMinute": 1152
+        },
+        {
+          "state": "выключен",
+          "duration": "00:05:57",
+          "start": "19:12:17",
+          "startMinute": 1152,
+          "durationSeconds": 357,
+          "end": "19:18:14",
+          "endMinute": 1158
+        },
+        {
+          "state": "включен",
+          "duration": "00:09:12",
+          "start": "19:18:14",
+          "startMinute": 1158,
+          "durationSeconds": 552,
+          "end": "19:27:26",
+          "endMinute": 1167
+        },
+        {
+          "state": "выключен",
+          "duration": "02:11:16",
+          "start": "19:27:26",
+          "startMinute": 1167,
+          "durationSeconds": 7876,
+          "end": "21:38:42",
+          "endMinute": 1299
+        },
+        {
+          "state": "включен",
+          "duration": "00:05:40",
+          "start": "21:38:42",
+          "startMinute": 1299,
+          "durationSeconds": 340,
+          "end": "21:44:22",
+          "endMinute": 1304
+        },
+        {
+          "state": "выключен",
+          "duration": "00:32:23",
+          "start": "21:44:22",
+          "startMinute": 1304,
+          "durationSeconds": 1943,
+          "end": "22:16:45",
+          "endMinute": 1337
+        },
+        {
+          "state": "включен",
+          "duration": "00:19:19",
+          "start": "22:16:45",
+          "startMinute": 1337,
+          "durationSeconds": 1159,
+          "end": "22:36:04",
+          "endMinute": 1356
+        },
+        {
+          "state": "гибернация",
+          "duration": "01:23:56",
+          "start": "22:36:04",
+          "startMinute": 1356,
+          "durationSeconds": 5036,
+          "end": "24:00:00",
+          "endMinute": 1440
+        }
+      ]
     }
   },
-  "updatedAt": "2026-11-27T15:54:03+03:00",
-  "userId": "6278269178"
+  "userId": "6278269178",
+  "device": "WOMI-PC"
 };
